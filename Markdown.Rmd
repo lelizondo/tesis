@@ -40,6 +40,12 @@ library("readxl")
 ```
 
 # Population data: Infonavit's portfolio today
+
+## Data Analysis
+```{r}
+```
+
+## Past Due Portfolio Analysis
 ```{r}
 ```
 
@@ -61,7 +67,6 @@ data1<-rbind(y2013,y2014,y2015,y2016,y2017,y2018,y2019,y2020,y2021)
 nrow(data1)
 ```
 
-## Clean
 ```{r}
 data2<-subset(data1, select = -c(ENTIDAD,CLAVE_MUNICIPIO,MUNICIPIO,ORGANISMO,ACCIONES))
 
@@ -84,20 +89,24 @@ head(data2)
 tail(data2)
 ```
 
-## Adjust to population's characteristics 
-```{r}
-
-```
-
-## Asign Status
+## Sample Data Analysis
 ```{r}
 ```
 
-## Data Analysis
+## Adjust Sample to Match Population's Characteristics 
 ```{r}
 ```
 
-## Logistic model and tests
+## Asign Variable Status
 ```{r}
 ```
+
+# Credit Risk Model
+```{r}
+```
+
+# Building a Cross-Subsidy Scheme & Tests
+```{r}
+```
+
 
