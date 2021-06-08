@@ -1,5 +1,5 @@
 ---
-title: "A Cross-Subsidy Scheme for Social Housing in Mexico"
+title: "Pre-Processed Data"
 author:
 - Lourdes Sofía Elizondo Guajardo
 - Daniela Diaz Delgado
@@ -15,7 +15,7 @@ output:
     toc: yes
     toc_depth: '4'
     df_print: paged
-subtitle: Test
+subtitle:
 ---
 
 ```{r setup, include=FALSE}

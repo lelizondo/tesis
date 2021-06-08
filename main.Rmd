@@ -1,5 +1,5 @@
 ---
-title: " "
+title: "A Cross-Subsidy Scheme for Social Housing in Mexico"
 output:
   pdf_document:
     number_sections: TRUE
@@ -50,7 +50,7 @@ knitr::include_graphics("img/escudoudem.jpg")
 \Large
 
 \doublespacing
-{\bf TÍTULO DEL PROYECTO DE EVALUACIÓN FINAL PEF, \\SEGUNDO RENGLÓN PARA UN POSIBLE SUB-TÍTULO}
+{\bf A Cross-Subsidy Scheme for Social Housing in Mexico, \\ SUBTÍTULO*}
 
 \vspace{1 cm}
 
@@ -62,12 +62,11 @@ Autores (español), By (inglés)
 
 \Large
 
-{\bf NOMBRE DE ALUMNO 1\\NOMBRE DE ALUMNO 2\\NOMBRE DE ALUMNO 3\\NOMBRE DE ALUMNO 4}
+{\bf Daniela Díaz Delgado\\Lourdes Sofía Elizondo Guajardo\\Gabriel González Bataller\\Bernardo Ortega Chávez}
 
 \vspace{1.5 cm}
 
-Programas académicos \\
-Licenciatura en Finanzas Internacionales \\
+Programa académico \\
 Licenciatura en Economía
 
 \vspace{1.5 cm}
