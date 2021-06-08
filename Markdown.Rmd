@@ -1,5 +1,5 @@
 ---
-title: "Tesis"
+title: "A Cross-subsidy Scheme for Social Housing in Mexico"
 author:
 - Lourdes Sofía Elizondo Guajardo
 - Daniela Diaz Delgado
@@ -39,29 +39,29 @@ library("Sim.DiffProc")
 library("readxl")
 ```
 
-# Datos POBLACIÓN: cartera actual Infonavit
+# Population data: Infonavit's portfolio today
 ```{r}
 ```
 
-# Datos MUESTRA: SNIIV 2013 - 2020
+# Sample data: mortgage loans 2013-2020
 
-## Importar datos
+## Data
 ```{r}
-y2013<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 2)
-y2014<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 3)
-y2015<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 4)
-y2016<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 5)
-y2017<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 6)
-y2018<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 7)
-y2019<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 8)
-y2020<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 9)
-y2021<-read_excel("/Users/lulyelizondo/Desktop/DATOSMUESTRA.xlsx", sheet = 10)
+y2013<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 2)
+y2014<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 3)
+y2015<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 4)
+y2016<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 5)
+y2017<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 6)
+y2018<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 7)
+y2019<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 8)
+y2020<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 9)
+y2021<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 10)
 
 data1<-rbind(y2013,y2014,y2015,y2016,y2017,y2018,y2019,y2020,y2021)
 nrow(data1)
 ```
 
-## Limpiar
+## Clean
 ```{r}
 data2<-subset(data1, select = -c(ENTIDAD,CLAVE_MUNICIPIO,MUNICIPIO,ORGANISMO,ACCIONES))
 
@@ -84,20 +84,20 @@ head(data2)
 tail(data2)
 ```
 
-## Ajustar a las características de la cartera total actual
+## Adjust to population's characteristics 
 ```{r}
 
 ```
 
-## Asignar variable status
+## Asign Status
 ```{r}
 ```
 
-## Análisis de datos
+## Data Analysis
 ```{r}
 ```
 
-## Modelo y pruebas
+## Logistic model and tests
 ```{r}
 ```
 
