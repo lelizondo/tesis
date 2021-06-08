@@ -42,7 +42,35 @@ library("readxl")
 # Population data: Infonavit's portfolio today
 
 ## Data Analysis
+
+N: Número de Créditos Formalizados
+I: Importe de Cheque
+M: Monto de Crédito Infonavit
+
 ```{r}
+NTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 1)
+NTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 2)
+NLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 3)
+NClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 4)
+NIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 5)
+NEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 6)
+NEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 7)
+
+ITotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 1)
+ITipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 2)
+ILinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 3)
+IClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 4)
+IIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 5)
+IEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 6)
+IEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 7)
+
+MTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 1)
+MTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 2)
+MLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 3)
+MClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 4)
+MIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 5)
+MEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 6)
+MEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 7)
 ```
 
 ## Past Due Portfolio Analysis
