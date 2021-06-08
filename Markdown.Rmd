@@ -1,5 +1,5 @@
 ---
-title: "A Cross-subsidy Scheme for Social Housing in Mexico"
+title: "A Cross-Subsidy Scheme for Social Housing in Mexico"
 author:
 - Lourdes Sofía Elizondo Guajardo
 - Daniela Diaz Delgado
@@ -15,7 +15,7 @@ output:
     toc: yes
     toc_depth: '4'
     df_print: paged
-subtitle: Primer prueba
+subtitle: Test!
 ---
 
 ```{r setup, include=FALSE}
@@ -102,11 +102,25 @@ tail(data2)
 ```
 
 # Credit Risk Model
+
+## Logistic Regression
 ```{r}
 ```
 
-# Building a Cross-Subsidy Scheme & Tests
+## Evaluation
 ```{r}
 ```
 
+## Regional Analysis
+```{r}
+```
 
+# Building a Cross-Subsidy Scheme
+
+## Asigning an Interest Rate
+```{r}
+```
+
+# Comparative Statics & Tests
+```{r}
+```
