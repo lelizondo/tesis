@@ -1,5 +1,5 @@
 ---
-title: "Pre-Processed Data"
+title: "Datos"
 author:
 - Lourdes Sofía Elizondo Guajardo
 - Daniela Diaz Delgado
@@ -20,7 +20,6 @@ subtitle:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
 library("gmodels")
 library("ggplot2")
 library("pROC")
@@ -37,25 +36,24 @@ library("knitr")
 library("plotly")
 library("Sim.DiffProc")
 library("readxl")
+library("usethis")
 ```
 
 # Population data: Infonavit's portfolio today
 
 ## Data Analysis
 
-N: Número de Créditos Formalizados
-I: Importe de Cheque
-M: Monto de Crédito Infonavit
-
 ```{r}
-NTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 1)
-NTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 2)
-NLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 3)
-NClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 4)
-NIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 5)
-NEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 6)
-NEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 7)
+# Número de Créditos Formalizados
+NCTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 1)
+NCTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 2)
+NCLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 3)
+NCClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 4)
+NCIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 5)
+NCEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 6)
+NCEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 7)
 
+# Importe de Cheque
 ITotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 1)
 ITipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 2)
 ILinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 3)
@@ -64,17 +62,43 @@ IIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx
 IEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 6)
 IEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 7)
 
-MTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 1)
-MTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 2)
-MLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 3)
-MClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 4)
-MIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 5)
-MEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 6)
-MEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 7)
+# Monto de Crédito Infonavit
+MCTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 1)
+MCTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 2)
+MCLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 3)
+MCClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 4)
+MCIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 5)
+MCEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 6)
+MCEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 7)
+
+# Número de Subsidios
+NSTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 1)
+NSTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 2)
+NSLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 3)
+NSClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 4)
+NSIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 5)
+NSEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 6)
+NSEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 7)
+
+# Monto de Subsidios
+MSTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 1)
+MSTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 2)
+MSLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 3)
+MSClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 4)
+MSIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 5)
+MSEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 6)
+MSEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 7)
+
+# Recaudación y Fiscalización de las Aportaciones Patronales
+RFAP<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/RecaudacionYFiscalizacionDeAportacionesPatronales.xlsx", sheet = 1)
+
+# Administración de la Subcuenta de Vivienda
+ASV<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/AdminSubcuentaDeVivienda.xlsx", sheet = 1)
 ```
 
 ## Past Due Portfolio Analysis
 ```{r}
+
 ```
 
 # Sample data: mortgage loans 2013-2020
