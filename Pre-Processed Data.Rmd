@@ -37,6 +37,7 @@ library("plotly")
 library("Sim.DiffProc")
 library("readxl")
 library("usethis")
+library("curl")
 ```
 
 # Population data: Infonavit's portfolio today
@@ -120,11 +121,12 @@ nrow(data1)
 ```
 
 ```{r}
-data2<-subset(data1, select = -c(ENTIDAD,CLAVE_MUNICIPIO,MUNICIPIO,ORGANISMO,ACCIONES))
+data2<-subset(data1, select = -c(ENTIDAD,MUNICIPIO,ORGANISMO,ACCIONES))
 
 data2$AÑO<-factor(data2$AÑO)
 data2$MES_ACUMULADO<-factor(data2$MES_ACUMULADO)
 data2$CLAVE_ENTIDAD<-factor(data2$CLAVE_ENTIDAD)
+data2$CLAVE_MUNICIPIO<-factor(data2$CLAVE_MUNICIPIO)
 data2$MODALIDAD<-factor(data2$MODALIDAD)
 data2$DESTINO<-factor(data2$DESTINO)
 data2$TIPO<-factor(data2$TIPO)
@@ -139,6 +141,9 @@ summary(data2)
 str(data2)
 head(data2)
 tail(data2)
+
+data3<-as.data.frame(data2)
+save(data3,file="MUESTRA.rds")
 ```
 
 ## Sample Data Analysis
