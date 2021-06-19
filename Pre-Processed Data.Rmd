@@ -143,6 +143,10 @@ tail(data2)
 
 ## Sample Data Analysis
 ```{r}
+hello<-subset(data2,data2$TIPO=="Cofinanciamientos y subsidios")
+hello
+nrow(data2)-nrow(hello)
+
 ```
 
 ## Adjust Sample to Match Population's Characteristics 
