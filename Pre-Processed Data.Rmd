@@ -38,120 +38,371 @@ library("Sim.DiffProc")
 library("readxl")
 library("usethis")
 library("curl")
+library("dplyr")
+library("tidyr")
+library("scales")
+library("RColorBrewer")
+library("forcats")
+library("ggrepel")
 ```
+
+
+
+
+
+
+
+
+
 
 # Population data: Infonavit's portfolio today
 
 ## Data Analysis
-
-```{r}
+```{r LoadingData1}
 # Número de Créditos Formalizados
-NCTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 1)
-NCTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 2)
-NCLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 3)
-NCClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 4)
-NCIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 5)
-NCEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 6)
-NCEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeCreditosFormalizados.xlsx", sheet = 7)
+NCTotal<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 1))
+MCTipoProducto<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 2))
+NCLinea<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 3))
+NCClasificacionVivienda<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 4))
+NCIngreso<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 5))
+NCEdad<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 6))
+NCEstado<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 7))
+## Totales
+NC_TP<-as.data.frame(read_excel("DATA/Totales/NC.xlsx",sheet=1))
+NC_L<-as.data.frame(read_excel("DATA/Totales/NC.xlsx",sheet=2))
+NC_CV<-as.data.frame(read_excel("DATA/Totales/NC.xlsx",sheet=3))
+NC_I<-as.data.frame(read_excel("DATA/Totales/NC.xlsx",sheet=4))
+NC_Edad<-as.data.frame(read_excel("DATA/Totales/NC.xlsx",sheet=5))
+NC_Estado<-as.data.frame(read_excel("DATA/Totales/NC.xlsx",sheet=6))
+
 
 # Importe de Cheque
-ITotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 1)
-ITipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 2)
-ILinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 3)
-IClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 4)
-IIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 5)
-IEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 6)
-IEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/ImporteDeCheque.xlsx", sheet = 7)
+ITotal<-as.data.frame(read_excel("DATA/ImporteDeCheque.xlsx", sheet = 1))
+ITipoProducto<-as.data.frame(read_excel("DATA/ImporteDeCheque.xlsx", sheet = 2))
+ILinea<-as.data.frame(read_excel("DATA/ImporteDeCheque.xlsx", sheet = 3))
+IClasificacionVivienda<-as.data.frame(read_excel("DATA/ImporteDeCheque.xlsx", sheet = 4))
+IIngreso<-as.data.frame(read_excel("DATA/ImporteDeCheque.xlsx", sheet = 5))
+IEdad<-as.data.frame(read_excel("DATA/ImporteDeCheque.xlsx", sheet = 6))
+IEstado<-as.data.frame(read_excel("DATA/ImporteDeCheque.xlsx", sheet = 7))
+## Totales
+I_TP<-as.data.frame(read_excel("DATA/Totales/I.xlsx",sheet=1))
+I_L<-as.data.frame(read_excel("DATA/Totales/I.xlsx",sheet=2))
+I_CV<-as.data.frame(read_excel("DATA/Totales/I.xlsx",sheet=3))
+I_I<-as.data.frame(read_excel("DATA/Totales/I.xlsx",sheet=4))
+I_Edad<-as.data.frame(read_excel("DATA/Totales/I.xlsx",sheet=5))
+I_Estado<-as.data.frame(read_excel("DATA/Totales/I.xlsx",sheet=6))
+
 
 # Monto de Crédito Infonavit
-MCTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 1)
-MCTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 2)
-MCLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 3)
-MCClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 4)
-MCIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 5)
-MCEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 6)
-MCEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeCreditoInfonavit.xlsx", sheet = 7)
+MCTotal<-as.data.frame(read_excel("DATA/MontoDeCreditoInfonavit.xlsx", sheet = 1))
+MCTipoProducto<-as.data.frame(read_excel("DATA/MontoDeCreditoInfonavit.xlsx", sheet = 2))
+MCLinea<-as.data.frame(read_excel("DATA/MontoDeCreditoInfonavit.xlsx", sheet = 3))
+MCClasificacionVivienda<-as.data.frame(read_excel("DATA/MontoDeCreditoInfonavit.xlsx", sheet = 4))
+MCIngreso<-as.data.frame(read_excel("DATA/MontoDeCreditoInfonavit.xlsx", sheet = 5))
+MCEdad<-as.data.frame(read_excel("DATA/MontoDeCreditoInfonavit.xlsx", sheet = 6))
+MCEstado<-as.data.frame(read_excel("DATA/MontoDeCreditoInfonavit.xlsx", sheet = 7))
+## Totales
+MC_TP<-as.data.frame(read_excel("DATA/Totales/MC.xlsx",sheet=1))
+MC_L<-as.data.frame(read_excel("DATA/Totales/MC.xlsx",sheet=2))
+MC_CV<-as.data.frame(read_excel("DATA/Totales/MC.xlsx",sheet=3))
+MC_I<-as.data.frame(read_excel("DATA/Totales/MC.xlsx",sheet=4))
+MC_Edad<-as.data.frame(read_excel("DATA/Totales/MC.xlsx",sheet=5))
+MC_Estado<-as.data.frame(read_excel("DATA/Totales/MC.xlsx",sheet=6))
+
 
 # Número de Subsidios
-NSTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 1)
-NSTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 2)
-NSLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 3)
-NSClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 4)
-NSIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 5)
-NSEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 6)
-NSEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/NumeroDeSubsidios.xlsx", sheet = 7)
+NSTotal<-as.data.frame(read_excel("DATA/NumeroDeSubsidios.xlsx", sheet = 1))
+NSTipoProducto<-as.data.frame(read_excel("DATA/NumeroDeSubsidios.xlsx", sheet = 2))
+NSLinea<-as.data.frame(read_excel("DATA/NumeroDeSubsidios.xlsx", sheet = 3))
+NSClasificacionVivienda<-as.data.frame(read_excel("DATA/NumeroDeSubsidios.xlsx", sheet = 4))
+NSIngreso<-as.data.frame(read_excel("DATA/NumeroDeSubsidios.xlsx", sheet = 5))
+NSEdad<-as.data.frame(read_excel("DATA/NumeroDeSubsidios.xlsx", sheet = 6))
+NSEstado<-as.data.frame(read_excel("DATA/NumeroDeSubsidios.xlsx", sheet = 7))
+## Totales
+NS_TP<-as.data.frame(read_excel("DATA/Totales/NS.xlsx",sheet=1))
+NS_L<-as.data.frame(read_excel("DATA/Totales/NS.xlsx",sheet=2))
+NS_CV<-as.data.frame(read_excel("DATA/Totales/NS.xlsx",sheet=3))
+NS_I<-as.data.frame(read_excel("DATA/Totales/NS.xlsx",sheet=4))
+NS_Edad<-as.data.frame(read_excel("DATA/Totales/NS.xlsx",sheet=5))
+NS_Estado<-as.data.frame(read_excel("DATA/Totales/NS.xlsx",sheet=6))
+
 
 # Monto de Subsidios
-MSTotal<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 1)
-MSTipoDeProducto<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 2)
-MSLinea<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 3)
-MSClasifDeVivienda<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 4)
-MSIngreso<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 5)
-MSEdad<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 6)
-MSEstado<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/MontoDeSubsidios.xlsx", sheet = 7)
+MSTotal<-as.data.frame(read_excel("DATA/MontoDeSubsidios.xlsx", sheet = 1))
+MSTipoProducto<-as.data.frame(read_excel("DATA/MontoDeSubsidios.xlsx", sheet = 2))
+MSLinea<-as.data.frame(read_excel("DATA/MontoDeSubsidios.xlsx", sheet = 3))
+MSClasificacionVivienda<-as.data.frame(read_excel("DATA/MontoDeSubsidios.xlsx", sheet = 4))
+MSIngreso<-as.data.frame(read_excel("DATA/MontoDeSubsidios.xlsx", sheet = 5))
+MSEdad<-as.data.frame(read_excel("DATA/MontoDeSubsidios.xlsx", sheet = 6))
+MSEstado<-as.data.frame(read_excel("DATA/MontoDeSubsidios.xlsx", sheet = 7))
+## Totales
+MS_TP<-as.data.frame(read_excel("DATA/Totales/MS.xlsx",sheet=1))
+MS_L<-as.data.frame(read_excel("DATA/Totales/MS.xlsx",sheet=2))
+MS_CV<-as.data.frame(read_excel("DATA/Totales/MS.xlsx",sheet=3))
+MS_I<-as.data.frame(read_excel("DATA/Totales/MS.xlsx",sheet=4))
+MS_Edad<-as.data.frame(read_excel("DATA/Totales/MS.xlsx",sheet=5))
+MS_Estado<-as.data.frame(read_excel("DATA/Totales/MS.xlsx",sheet=6))
 
 # Recaudación y Fiscalización de las Aportaciones Patronales
-RFAP<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/RecaudacionYFiscalizacionDeAportacionesPatronales.xlsx", sheet = 1)
+RFAP<-as.data.frame(read_excel("DATA/RecaudacionYFiscalizacionDeAportacionesPatronales.xlsx", sheet = 1))
 
 # Administración de la Subcuenta de Vivienda
-ASV<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/AdminSubcuentaDeVivienda.xlsx", sheet = 1)
+ASV<-as.data.frame(read_excel("DATA/AdminSubcuentaDeVivienda.xlsx", sheet = 1))
 ```
 
-## Past Due Portfolio Analysis
-```{r}
+### Time Series 2013-2021
+
+```{r TimeSeriesNC}
+```
+
+```{r TimeSeriesMC}
+```
+
+```{r TimeSeriesI}
+```
+
+```{r TimeSeriesNS}
+```
+
+```{r TimeSeriesMS}
+```
+
+```{r TimeSeriesRFAP}
+```
+
+```{r TimeSeriesASV}
+```
+
+
+### Totals 2013-2021
+```{r TotalsNC_CODE}
+# Por Estado
+barplot_NC_Estado<-ggplot(data=NC_Estado)+
+  geom_bar(aes(x=reorder(Estado,-NC),y=NC,fill=Estado),stat = "identity")+
+  geom_text(aes(x=Estado,y=NC,label=NC),hjust=-0.2, size=2.5,angle=90)+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "Number of loans granted",
+        title ="Loan distribution per State",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  ylim(0,625000)+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=0,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
+
+# Por Tipo de Producto
+percent_TP<-paste(round(100*(NC_TP$NC/(sum(NC_TP$NC))), 2), "%", sep="")
+NC_TP$percent=percent_TP
+
+piechart_NC_TP<-ggplot(data=NC_TP, aes(x="", y=NC, fill=TipoProducto)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_TP), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  guides(fill = guide_legend(title = "Product Type"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Loan Distribution per Product Type",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Clasificación de Vivienda
+percent_CV<-paste(round(100*(NC_CV$NC/(sum(NC_CV$NC))), 2), "%", sep="")
+NC_CV$percent=percent_CV
+
+piechart_NC_CV<-ggplot(data=NC_CV, aes(x="", y=NC, fill=ClasificacionVivienda)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_CV), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  guides(fill = guide_legend(title = "Dwelling Classification"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Loan Distribution per Dwelling Classification",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Linea
+percent_L<-paste(round(100*(NC_L$NC/(sum(NC_L$NC))), 2), "%", sep="")
+NC_L$percent=percent_L
+
+piechart_NC_L<-ggplot(data=NC_L, aes(x="", y=NC, fill=Linea)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_L), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  guides(fill = guide_legend(title = "Credit Line"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Loan Distribution per Credit Line",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Ingreso
+UMA<-c("1","1-2","2-3","3-4","4-5","5-6","6-7","7-8","8-9","9-10","10-11","11-12","12-13","13-14","14-15","15-16","16-17","17-18","18-19","19-20","20-21","21-22","22-23","23-24","24-25","25+","Other")
+NC_I$UMA<-UMA
+
+barplot_NC_I<-ggplot(data=NC_I)+
+  geom_bar(aes(x=reorder(UMA,-NC),y=NC,fill=UMA),stat = "identity")+
+  geom_text(aes(x=UMA,y=NC,label=NC),hjust=-0.2, size=2.5,angle=90)+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(NC_I)))+
+  labs( x = "Income (UMA)", 
+        y = "Number of loans granted",
+        title ="Loans distribution per Income (UMA)",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=0,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )+
+  coord_cartesian(ylim=c(0,1300000))
+
+# Por Edad
+Edad2<-c("20","21-25","26-30","31-35","36-40","41-45","46-50","51-55","56-60","61-65","65+","Otros")
+NC_Edad$Edad2<-Edad2
+
+barplot_NC_Edad<-ggplot(data=NC_Edad)+
+  geom_bar(aes(x=Edad2,y=NC,fill=Edad2),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(NC_I)))+
+  labs( x = "Age group", 
+        y = "Number of loans granted",
+        title ="Loan distribution per Age",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=6,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
+```
+```{r TotalsNC_GRAPHS}
+barplot_NC_Estado
+piechart_NC_TP
+piechart_NC_CV
+barplot_NC_I
+piechart_NC_L
+barplot_NC_Edad
+```
+
+```{r TotalsNC_CROSSED_CODE}
+# Cruce 1: Por estado y apilado por clasificación de vivienda
+# Cruce 2: Por ingreso y apilado por clasificación de vivienda
+# Cruce 3:
+```
+```{r TotalsNC_CROSSED_GRAPHS}
 
 ```
+
+```{r TotalsMC_CODE}
+# Distribución de los montos totales
+
+# Monto promedio por estado
+
+# Monto por nivel de ingreso 
+
+# Monto 
+```
+```{r TotalsMC_GRAPHS}
+```
+
+```{r TotalsI}
+```
+
+```{r TotalsNS_CODE}
+# Número de subsidios por estado
+
+# Número de subsidios como proporción de número de créditos otorgados
+
+# Número de subsidios por ingreso
+
+# Número de subsidios por clasificación de vivienda
+
+# Número de subsidios por edad
+```
+```{r TotalsNS_GRAPHS}
+```
+
+```{r TotalsMS_CODE}
+# Monto de subsidios por estado
+
+# Monto de subsidios por ingreso
+
+# Monto de subsidios por clasificación de vivienda
+
+# Monto de subsidios por edad
+```
+```{r TotalsMS_GRAPHS}
+```
+
+## Regional
+```{r clusters}
+# Data visualization: agrupado por región
+
+```
+
+## Complete Portfolio Analysis
+```{r LoadingData2}
+# Cartera de vivienda del Infonavit: COMPLETA (NO 2013-2021, sino HISTÓRICA) 
+# Barras por estado apiladas con cartera: vigente, prórroga y vencida
+
+```
+
+
+
+
+
+
+
+
+
 
 # Sample data: mortgage loans 2013-2020
 
 ## Data
-```{r}
-y2013<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 2)
-y2014<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 3)
-y2015<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 4)
-y2016<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 5)
-y2017<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 6)
-y2018<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 7)
-y2019<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 8)
-y2020<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 9)
-y2021<-read_excel("/Users/lulyelizondo/Desktop/DATATESIS/DATOSMUESTRA.xlsx", sheet = 10)
-
-data1<-rbind(y2013,y2014,y2015,y2016,y2017,y2018,y2019,y2020,y2021)
-nrow(data1)
-```
-
-```{r}
-data2<-subset(data1, select = -c(ENTIDAD,MUNICIPIO,ORGANISMO,ACCIONES))
-
-data2$AÑO<-factor(data2$AÑO)
-data2$MES_ACUMULADO<-factor(data2$MES_ACUMULADO)
-data2$CLAVE_ENTIDAD<-factor(data2$CLAVE_ENTIDAD)
-data2$CLAVE_MUNICIPIO<-factor(data2$CLAVE_MUNICIPIO)
-data2$MODALIDAD<-factor(data2$MODALIDAD)
-data2$DESTINO<-factor(data2$DESTINO)
-data2$TIPO<-factor(data2$TIPO)
-data2$GENERO<-factor(data2$GENERO)
-data2$EDAD<-factor(data2$EDAD)
-data2$INGRESO<-factor(data2$INGRESO)
-data2$VALOR_VIVIENDA<-factor(data2$VALOR_VIVIENDA)
-data2$MONTO<-as.numeric(data2$MONTO)
-data2$CLAVE<-factor(data2$CLAVE)
-
-summary(data2)
-str(data2)
-head(data2)
-tail(data2)
-
-data3<-as.data.frame(data2)
-save(data3,file="MUESTRA.rds")
+```{r LoadingData3}
+sample<-readRDS(file="DATA/MUESTRA.Rds")
+head(sample)
+tail(sample)
+str(sample)
+summary(sample)
 ```
 
 ## Sample Data Analysis
 ```{r}
-hello<-subset(data2,data2$TIPO=="Cofinanciamientos y subsidios")
-hello
-nrow(data2)-nrow(hello)
-
 ```
 
 ## Adjust Sample to Match Population's Characteristics 
@@ -161,6 +412,15 @@ nrow(data2)-nrow(hello)
 ## Asign Variable Status
 ```{r}
 ```
+
+
+
+
+
+
+
+
+
 
 # Credit Risk Model
 
@@ -175,6 +435,15 @@ nrow(data2)-nrow(hello)
 ## Regional Analysis
 ```{r}
 ```
+
+
+
+
+
+
+
+
+
 
 # Building a Cross-Subsidy Scheme
 
