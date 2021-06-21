@@ -774,11 +774,11 @@ CP_saldos<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 2))
 ```
 ```{r CompletePortfolio_CODE}
 # Panel con cuatro gráficas, una gráfica por año: Barras por estado con el total 
-# de cartera en número de cuentas. Las barras apiladas por vigente + prórroga + vencida
+# de cartera en número de cuentas. Cada barra apilada por vigente + prórroga + vencida
 # PENDIENTE
 
 # Panel con cuatro gráficas, una gráfica por año: Barras por estado con el total 
-# de cartera en saldo (mdp MXN). Las barras apiladas por vigente + prórroga + vencida
+# de cartera en saldo (mdp MXN). Cada barra apilada por vigente + prórroga + vencida
 # PENDIENTE
 
 # Gráfica con la sheet 2 del excel, pero sos*
