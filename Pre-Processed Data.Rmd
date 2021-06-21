@@ -186,7 +186,8 @@ barplot_NC_Estado_percent<-ggplot(data=NC_Estado)+
     plot.title = element_text(hjust=0.5),
     plot.subtitle=element_text(hjust=0.5),
     legend.position = "none"
-    )
+    )+ylim(0,625000)
+  
 
 # Por Tipo de Producto
 percent_TP<-paste(round(100*(NC_TP$NC/(sum(NC_TP$NC))), 2), "%", sep="")
@@ -302,7 +303,7 @@ barplot_NC_Edad<-ggplot(data=NC_Edad)+
     legend.position = "none"
     )
 ```
-```{r TotalsNC_GRAPHS}
+```{r TotalsNC_GRAPHS, fig.align='center'}
 barplot_NC_Estado
 barplot_NC_Estado_percent
 piechart_NC_TP
@@ -350,7 +351,7 @@ barplot_MC_Estado_percent<-ggplot(data=MC_Estado)+
     plot.title = element_text(hjust=0.5),
     plot.subtitle=element_text(hjust=0.5),
     legend.position = "none"
-    )
+    )+ylim(0,143000000000)
 
 # Por Tipo de Producto
 percent_TP2<-paste(round(100*(MC_TP$MC/(sum(MC_TP$MC))), 2), "%", sep="")
@@ -462,7 +463,7 @@ barplot_MC_Edad<-ggplot(data=MC_Edad)+
     legend.position = "none"
     )
 ```
-```{r TotalsMC_GRAPHS}
+```{r TotalsMC_GRAPHS, fig.align='center'}
 barplot_MC_Estado
 barplot_MC_Estado_percent
 piechart_MC_TP
@@ -604,7 +605,7 @@ barplot_NS_Edad<-ggplot(data=NS_Edad)+
     legend.position = "none"
     )
 ```
-```{r TotalsNS_GRAPHS}
+```{r TotalsNS_GRAPHS, fig.align='center'}
 barplot_NS_Estado
 barplot_NS_Estado_percent
 piechart_NS_CV
@@ -742,7 +743,7 @@ barplot_MS_Edad<-ggplot(data=MS_Edad)+
     legend.position = "none"
     )
 ```
-```{r TotalsMS_GRAPHS}
+```{r TotalsMS_GRAPHS, fig.align='center'}
 barplot_MS_Estado
 barplot_MS_Estado_percent
 piechart_MS_CV
@@ -751,22 +752,25 @@ barplot_MS_I
 barplot_MS_Edad
 ```
 
-```{r}
+```{r TimeSeries, fig.align='center'}
 timeseries_NCTotal<-ggplot(data=NCTotal)+
   geom_line(aes(x=Fecha,y=TotalNacional))
 timeseries_NCTotal
 ```
 
-## Data reported in SNIIV: Complete Portfolio Analysis
+## "Sistema de Información Infonavit": Complete Portfolio Analysis
 
-https://sniiv.conavi.gob.mx/demanda/index.aspx
+https://portalmx.infonavit.org.mx/wps/portal/infonavit.web/transparencia/estaditicas/!ut/p/z1/jY_BCsIwEEQ_aTdNSdZjUmtalKQFQ-tepCcJaPUgfr8iXjwYO7eBNzMMMIzA8_RIp-mervN0fvkDq6NyiE1VCh_MtsSebIdWd1IZDcMbKAjRWRTeUUNoNnVbr3aycFEAL8njDxlcls8AnK8fgL8nnCXC3u29rUKQtNYfIHfx38jtEuOIqX0C2OrEmg!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/
 
-Leaving behind the data from "Sistema de Información Infonavit" we now consider the information reported in *SNIIV* regarding the composition of Infonavit's *complete* portfolio. The data analyzed before were credits originated from January 2013 to April 2021, but SNIIV includes mortgages originated before 2013, considering the *complete portfolio* as of 30th of April, 2021.
+Leaving behind the database of "otorgamiento de crédito" we now consider the information reported in the section "Estadísticas", which gives portfolio operating indicators of Infonavit's **complete** portfolio. The database decomposes Infonavit's portfolio by: past due portfolio (vencida), extension portfolio (prórrroga) and current portfolio (vigente). 
+
+Note that, before, we were analyzing credits originated from January 2013 to April 2021, but this new database includes mortgages originated **before** 2013, considering the **complete portfolio** as of 30th of April, 2021.
 
 ```{r LoadingData2}
-# Cartera de vivienda del Infonavit: COMPLETA
+# Complete Portfolio (CP) composition
+CP_cuentas<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 1))
+CP_saldos<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 2))
 ```
-
 ```{r CompletePortfolio_CODE}
 ```
 ```{r CompletePortfolio_GRAPHS}
@@ -776,7 +780,7 @@ Leaving behind the data from "Sistema de Información Infonavit" we now consider
 
 Now, we consider our main database. This is the data from where we intend to develop our credit risk model; it describes credits originated from January 2013 to April 2021 *individually*, characterizing each beneficiary by different variables like age, gender, type of dwelling, etc.
 
-In theory, this data base should be exactly the same as the data analyzed at the beginning, reported in "Sistema de Información Infonavit 2013/01-2021/04". However, we do not expect this database to be distributed exactly the same as the complete portfolio information. We intend to manipulate this sample to best resemble the complete portfolio, so the credit risk model can more accurately represent reality.
+In theory, this data base should be exactly the same as the data analyzed at the beginning, reported in "Sistema de Información Infonavit 2013/01-2021/04". However, we do not expect this database to be distributed exactly the same as the complete portfolio information. We intend to manipulate this sample to best resemble the complete portfolio, so that the credit risk model can more accurately represent reality.
 
 ## Data
 ```{r LoadingData3}
