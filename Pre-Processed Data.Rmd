@@ -46,18 +46,13 @@ library("forcats")
 library("ggrepel")
 ```
 
+# Data Analysis 
 
+## Data Reported in Sistema de Información Infonavit 2013/01-2021/04
 
+Information corresponding all mortgages originated by Infonavit from January 2013 to April 2021.
+https://portalmx.infonavit.org.mx/wps/portal/infonavit.web/el-instituto/el-infonavit/SII/!ut/p/z1/pZBBDoIwFETP4gn-FJHWJRosFQKiqUA3pitCoujCeH7RJcSKcXY_eTN_MmSoItPZR9vYe3vt7Lm_axOcAgnEa59lQh05iijwc873yAWncgCkyQIFdonEFuzAQOYfv_am-T0ByBVYJkUsEG4iFS3TuSc1m-bHB4U_9x8Bxh1fkhm8GC_oBF4TvQHXBt9a3C66V4VWNbMnVfmrRQ!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/
 
-
-
-
-
-
-
-# Population data: Infonavit's portfolio today
-
-## Data Analysis
 ```{r LoadingData1}
 # Número de Créditos Formalizados
 NCTotal<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 1))
@@ -150,31 +145,7 @@ RFAP<-as.data.frame(read_excel("DATA/RecaudacionYFiscalizacionDeAportacionesPatr
 ASV<-as.data.frame(read_excel("DATA/AdminSubcuentaDeVivienda.xlsx", sheet = 1))
 ```
 
-### Time Series 2013-2021
-
-```{r TimeSeriesNC}
-```
-
-```{r TimeSeriesMC}
-```
-
-```{r TimeSeriesI}
-```
-
-```{r TimeSeriesNS}
-```
-
-```{r TimeSeriesMS}
-```
-
-```{r TimeSeriesRFAP}
-```
-
-```{r TimeSeriesASV}
-```
-
-
-### Totals 2013-2021
+### Number of Credits Granted 
 ```{r TotalsNC_CODE}
 # Por Estado
 barplot_NC_Estado<-ggplot(data=NC_Estado)+
@@ -187,6 +158,27 @@ barplot_NC_Estado<-ggplot(data=NC_Estado)+
         subtitle = "2013/01 - 2021/04"
         )+
   ylim(0,625000)+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=0,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
+
+# Por Estado como porcentaje
+percent_Estado<-paste(round(100*(NC_Estado$NC/(sum(NC_Estado$NC))), 2), "%", sep="")
+NC_Estado$percent<-percent_Estado
+
+barplot_NC_Estado_percent<-ggplot(data=NC_Estado)+
+  geom_bar(aes(x=reorder(Estado,-NC),y=NC,fill=Estado),stat = "identity")+
+  geom_text(aes(x=Estado,y=NC,label=percent_Estado),hjust=-0.2, size=2.5,angle=90)+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "% / Total Loans Granted",
+        title ="Loan distribution per State",
+        subtitle = "2013/01 - 2021/04"
+        )+
   theme(
     axis.text.x=element_text(size=8,angle=45,hjust=1),
     axis.text.y=element_text(size=0,angle=45),
@@ -208,7 +200,7 @@ piechart_NC_TP<-ggplot(data=NC_TP, aes(x="", y=NC, fill=TipoProducto)) +
   labs(
     y="",
     x="",
-    title="Loan Distribution per Product Type",
+    title="Loan Distribution by Product Type",
     subtitle="2013/01 - 2021/04"
   )+
   theme(
@@ -232,7 +224,7 @@ piechart_NC_CV<-ggplot(data=NC_CV, aes(x="", y=NC, fill=ClasificacionVivienda)) 
   labs(
     y="",
     x="",
-    title="Loan Distribution per Dwelling Classification",
+    title="Loan Distribution by Dwelling Classification",
     subtitle="2013/01 - 2021/04"
   )+
   theme(
@@ -256,7 +248,7 @@ piechart_NC_L<-ggplot(data=NC_L, aes(x="", y=NC, fill=Linea)) +
   labs(
     y="",
     x="",
-    title="Loan Distribution per Credit Line",
+    title="Loan Distribution by Credit Line",
     subtitle="2013/01 - 2021/04"
   )+
   theme(
@@ -277,7 +269,7 @@ barplot_NC_I<-ggplot(data=NC_I)+
   scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(NC_I)))+
   labs( x = "Income (UMA)", 
         y = "Number of loans granted",
-        title ="Loans distribution per Income (UMA)",
+        title ="Loans distribution by Income (UMA)",
         subtitle = "2013/01 - 2021/04"
         )+
   theme(
@@ -298,7 +290,7 @@ barplot_NC_Edad<-ggplot(data=NC_Edad)+
   scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(NC_I)))+
   labs( x = "Age group", 
         y = "Number of loans granted",
-        title ="Loan distribution per Age",
+        title ="Loan distribution by Age",
         subtitle = "2013/01 - 2021/04"
         )+
   theme(
@@ -311,6 +303,7 @@ barplot_NC_Edad<-ggplot(data=NC_Edad)+
 ```
 ```{r TotalsNC_GRAPHS}
 barplot_NC_Estado
+barplot_NC_Estado_percent
 piechart_NC_TP
 piechart_NC_CV
 barplot_NC_I
@@ -318,79 +311,471 @@ piechart_NC_L
 barplot_NC_Edad
 ```
 
-```{r TotalsNC_CROSSED_CODE}
-# Cruce 1: Por estado y apilado por clasificación de vivienda
-# Cruce 2: Por ingreso y apilado por clasificación de vivienda
-# Cruce 3:
-```
-```{r TotalsNC_CROSSED_GRAPHS}
-
-```
-
+### Credit Amount (MXN)
 ```{r TotalsMC_CODE}
-# Distribución de los montos totales
+# Por Estado
+barplot_MC_Estado<-ggplot(data=MC_Estado)+
+  geom_bar(aes(x=reorder(Estado,-MC),y=MC,fill=Estado),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "Credit amount (MXN)",
+        title ="Total Amount of Granted Credit by State",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 
-# Monto promedio por estado
+# Por Estado como porcentaje
+percent_Estado2<-paste(round(100*(MC_Estado$MC/(sum(MC_Estado$MC))), 2), "%", sep="")
+MC_Estado$percent<-percent_Estado2
 
-# Monto por nivel de ingreso 
+barplot_MC_Estado_percent<-ggplot(data=MC_Estado)+
+  geom_bar(aes(x=reorder(Estado,-MC),y=MC,fill=Estado),stat = "identity")+
+  geom_text(aes(x=Estado,y=MC,label=percent_Estado2),hjust=-0.2, size=2.5,angle=90)+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "% / Total Amount of Credit",
+        title ="Total Amount of Granted Credit by State (%)",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=0,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 
-# Monto 
+# Por Tipo de Producto
+percent_TP2<-paste(round(100*(MC_TP$MC/(sum(MC_TP$MC))), 2), "%", sep="")
+MC_TP$percent=percent_TP2
+
+piechart_MC_TP<-ggplot(data=MC_TP, aes(x="", y=MC, fill=TipoProducto)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_TP2), size=3, show.legend = F, position = position_stack(vjust = 0.5),max.overlaps = Inf) +
+  guides(fill = guide_legend(title = "Product Type"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Total Amount of Granted Credit by Product Type",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Clasificación de Vivienda
+percent_CV2<-paste(round(100*(MC_CV$MC/(sum(MC_CV$MC))), 2), "%", sep="")
+MC_CV$percent=percent_CV2
+
+piechart_MC_CV<-ggplot(data=MC_CV, aes(x="", y=MC, fill=ClasificacionVivienda)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_CV2), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  guides(fill = guide_legend(title = "Dwelling Classification"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Total Amount of Granted Credit by Dwelling Classification",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Linea
+percent_L2<-paste(round(100*(MC_L$MC/(sum(MC_L$MC))), 2), "%", sep="")
+MC_L$percent=percent_L2
+
+piechart_MC_L<-ggplot(data=MC_L, aes(x="", y=MC, fill=Linea)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_L2), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  guides(fill = guide_legend(title = "Credit Line"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Total Amount of Granted Credit by Credit Line",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Ingreso
+MC_I$UMA<-UMA
+
+barplot_MC_I<-ggplot(data=MC_I)+
+  geom_bar(aes(x=reorder(UMA,-MC),y=MC,fill=UMA),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(MC_I)))+
+  labs( x = "Income (UMA)", 
+        y = "Credit Amount (MXN)",
+        title ="Total Amount of Granted Credit by Income (UMA)",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
+
+# Por Edad
+MC_Edad$Edad2<-Edad2
+
+barplot_MC_Edad<-ggplot(data=MC_Edad)+
+  geom_bar(aes(x=Edad2,y=MC,fill=Edad2),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(MC_I)))+
+  labs( x = "Age group", 
+        y = "Credit Amount (MXN)",
+        title ="Total Amount of Granted Credit by Age",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=6,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 ```
 ```{r TotalsMC_GRAPHS}
+barplot_MC_Estado
+barplot_MC_Estado_percent
+piechart_MC_TP
+piechart_MC_CV
+piechart_MC_L
+barplot_MC_I
+barplot_MC_Edad
 ```
 
-```{r TotalsI}
-```
+### Subsidies
 
+#### Number of subsidies
 ```{r TotalsNS_CODE}
-# Número de subsidios por estado
 
-# Número de subsidios como proporción de número de créditos otorgados
+# Por Estado
+barplot_NS_Estado<-ggplot(data=NS_Estado)+
+  geom_bar(aes(x=reorder(Estado,-NS),y=NS,fill=Estado),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "Number of Subsidies",
+        title ="Number of Granted Subsidies by State",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 
-# Número de subsidios por ingreso
+# Por Estado como porcentaje
+percent_Estado3<-paste(round(100*(NS_Estado$NS/(sum(NS_Estado$NS))), 2), "%", sep="")
+NS_Estado$percent<-percent_Estado3
 
-# Número de subsidios por clasificación de vivienda
+barplot_NS_Estado_percent<-ggplot(data=NS_Estado)+
+  geom_bar(aes(x=reorder(Estado,-NS),y=NS,fill=Estado),stat = "identity")+
+  geom_text(aes(x=Estado,y=NS,label=percent_Estado3),hjust=-0.2, size=2.5,angle=90)+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "% / Total Subsidies Granted",
+        title ="Number of Granted Subsidies by State (%)",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=0,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 
-# Número de subsidios por edad
+# Por Tipo de Producto
+# No Aplica: Todos son crédito tradicional
+
+# Por Clasificación de Vivienda
+percent_CV3<-paste(round(100*(NS_CV$NS/(sum(NS_CV$NS))), 2), "%", sep="")
+NS_CV$percent=percent_CV3
+
+piechart_NS_CV<-ggplot(data=NS_CV, aes(x="", y=NS, fill=ClasificacionVivienda)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_CV3), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),max.overlaps = Inf) +
+  guides(fill = guide_legend(title = "Dwelling Classification"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Distribution of Subsidies by Dwelling Classification",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Linea
+percent_L3<-paste(round(100*(NS_L$NS/(sum(NS_L$NS))), 2), "%", sep="")
+NS_L$percent=percent_L3
+
+piechart_NS_L<-ggplot(data=NS_L, aes(x="", y=NS, fill=Linea)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_L3), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),max.overlaps = Inf) +
+  guides(fill = guide_legend(title = "Credit Line"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Distribution of Subsidies by Credit Line",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Ingreso
+NS_I$UMA<-UMA
+
+barplot_NS_I<-ggplot(data=NS_I)+
+  geom_bar(aes(x=reorder(UMA,-NS),y=NS,fill=UMA),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(NS_I)))+
+  labs( x = "Income (UMA)", 
+        y = "Number of Subsidies",
+        title ="Number of Granted Subsidies by Income (UMA)",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
+
+# Por Edad
+NS_Edad$Edad2<-Edad2
+
+barplot_NS_Edad<-ggplot(data=NS_Edad)+
+  geom_bar(aes(x=Edad2,y=NS,fill=Edad2),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(NS_I)))+
+  labs( x = "Age group", 
+        y = "Number of Subsidies",
+        title ="Number of Granted Subsidies by Age",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=6,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 ```
 ```{r TotalsNS_GRAPHS}
+barplot_NS_Estado
+barplot_NS_Estado_percent
+piechart_NS_CV
+piechart_NS_L
+barplot_NS_I
+barplot_NS_Edad
 ```
 
+#### Amount ($MXN)
 ```{r TotalsMS_CODE}
-# Monto de subsidios por estado
+# Por Estado
+barplot_MS_Estado<-ggplot(data=MS_Estado)+
+  geom_bar(aes(x=reorder(Estado,-MS),y=MS,fill=Estado),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "Amount (MXN)",
+        title ="Amount of Granted Subsidies by State",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 
-# Monto de subsidios por ingreso
+# Por Estado como porcentaje
+percent_Estado4<-paste(round(100*(MS_Estado$MS/(sum(MS_Estado$MS))), 2), "%", sep="")
+MS_Estado$percent<-percent_Estado4
 
-# Monto de subsidios por clasificación de vivienda
+barplot_MS_Estado_percent<-ggplot(data=MS_Estado)+
+  geom_bar(aes(x=reorder(Estado,-MS),y=MS,fill=Estado),stat = "identity")+
+  geom_text(aes(x=Estado,y=MS,label=percent_Estado4),hjust=-0.2, size=2.5,angle=90)+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "% / Total Amount",
+        title ="Amount of Granted Subsidies by State (%)",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=0,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 
-# Monto de subsidios por edad
+# Por Tipo de Producto
+# No Aplica: Todos son crédito tradicional
+
+# Por Clasificación de Vivienda
+percent_CV4<-paste(round(100*(MS_CV$MS/(sum(MS_CV$MS))), 2), "%", sep="")
+MS_CV$percent=percent_CV4
+
+piechart_MS_CV<-ggplot(data=MS_CV, aes(x="", y=MS, fill=ClasificacionVivienda)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_CV4), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),max.overlaps = Inf) +
+  guides(fill = guide_legend(title = "Dwelling Classification"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Amount of Subsidies by Dwelling Classification",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Linea
+percent_L4<-paste(round(100*(MS_L$MS/(sum(MS_L$MS))), 2), "%", sep="")
+MS_L$percent=percent_L4
+
+piechart_MS_L<-ggplot(data=MS_L, aes(x="", y=MS, fill=Linea)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+
+  geom_label_repel(aes(label = percent_L4), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),max.overlaps = Inf) +
+  guides(fill = guide_legend(title = "Credit Line"))+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
+  labs(
+    y="",
+    x="",
+    title="Amount of Subsidies by Credit Line",
+    subtitle="2013/01 - 2021/04"
+  )+
+  theme(
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid  = element_blank()
+  )
+
+# Por Ingreso
+MS_I$UMA<-UMA
+
+barplot_MS_I<-ggplot(data=MS_I)+
+  geom_bar(aes(x=reorder(UMA,-MS),y=MS,fill=UMA),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(MS_I)))+
+  labs( x = "Income (UMA)", 
+        y = "Amount (MXN)",
+        title ="Amount of Granted Subsidies by Income",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
+
+# Por Edad
+MS_Edad$Edad2<-Edad2
+
+barplot_MS_Edad<-ggplot(data=MS_Edad)+
+  geom_bar(aes(x=Edad2,y=MS,fill=Edad2),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(nrow(MS_I)))+
+  labs( x = "Age group", 
+        y = "Amount (MXN)",
+        title ="Amount of Granted Subsidies by Age",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=6,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
 ```
 ```{r TotalsMS_GRAPHS}
+barplot_MS_Estado
+barplot_MS_Estado_percent
+piechart_MS_CV
+piechart_MS_L
+barplot_MS_I
+barplot_MS_Edad
 ```
 
-## Regional
-```{r clusters}
-# Data visualization: agrupado por región
-
+```{r}
+timeseries_NCTotal<-ggplot(data=NCTotal)+
+  geom_line(aes(x=Fecha,y=TotalNacional))
+timeseries_NCTotal
 ```
 
-## Complete Portfolio Analysis
+## Data reported in SNIIV: Complete Portfolio Analysis
+
+https://sniiv.conavi.gob.mx/demanda/index.aspx
+
+Leaving behind the data from "Sistema de Información Infonavit" we now consider the information reported in *SNIIV* regarding the composition of Infonavit's *complete* portfolio. The data analyzed before were credits originated from January 2013 to April 2021, but SNIIV includes mortgages originated before 2013, considering the *complete portfolio* as of 30th of April, 2021.
+
 ```{r LoadingData2}
-# Cartera de vivienda del Infonavit: COMPLETA (NO 2013-2021, sino HISTÓRICA) 
-# Barras por estado apiladas con cartera: vigente, prórroga y vencida
-
+# Cartera de vivienda del Infonavit: COMPLETA
 ```
 
+```{r CompletePortfolio_CODE}
+```
+```{r CompletePortfolio_GRAPHS}
+```
 
+# Sample data
 
+Now, we consider our main database. This is the data from where we intend to develop our credit risk model; it describes credits originated from January 2013 to April 2021 *individually*, characterizing each beneficiary by different variables like age, gender, type of dwelling, etc.
 
-
-
-
-
-
-
-# Sample data: mortgage loans 2013-2020
+In theory, this data base should be exactly the same as the data analyzed at the beginning, reported in "Sistema de Información Infonavit 2013/01-2021/04". However, we do not expect this database to be distributed exactly the same as the complete portfolio information. We intend to manipulate this sample to best resemble the complete portfolio, so the credit risk model can more accurately represent reality.
 
 ## Data
 ```{r LoadingData3}
@@ -401,26 +786,20 @@ str(sample)
 summary(sample)
 ```
 
-## Sample Data Analysis
+## Data Analysis
 ```{r}
+# GRÁFICAS DE GABRIEL* Pegar su code*
 ```
 
 ## Adjust Sample to Match Population's Characteristics 
 ```{r}
+# Berny
 ```
 
 ## Asign Variable Status
 ```{r}
+# Luly
 ```
-
-
-
-
-
-
-
-
-
 
 # Credit Risk Model
 
@@ -435,15 +814,6 @@ summary(sample)
 ## Regional Analysis
 ```{r}
 ```
-
-
-
-
-
-
-
-
-
 
 # Building a Cross-Subsidy Scheme
 
