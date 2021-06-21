@@ -475,7 +475,7 @@ barplot_MC_Edad
 
 ### Subsidies
 
-#### Number of subsidies
+#### Number
 ```{r TotalsNS_CODE}
 
 # Por Estado
@@ -752,6 +752,7 @@ barplot_MS_I
 barplot_MS_Edad
 ```
 
+Solo para ver seasonality en el número de créditos otorgados por mes:
 ```{r TimeSeries, fig.align='center'}
 timeseries_NCTotal<-ggplot(data=NCTotal)+
   geom_line(aes(x=Fecha,y=TotalNacional))
@@ -772,17 +773,28 @@ CP_cuentas<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 1))
 CP_saldos<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 2))
 ```
 ```{r CompletePortfolio_CODE}
+# Panel con cuatro gráficas, una gráfica por año: Barras por estado con el total 
+# de cartera en número de cuentas. Las barras apiladas por vigente + prórroga + vencida
+# PENDIENTE
+
+# Panel con cuatro gráficas, una gráfica por año: Barras por estado con el total 
+# de cartera en saldo (mdp MXN). Las barras apiladas por vigente + prórroga + vencida
+# PENDIENTE
+
+# Gráfica con la sheet 2 del excel, pero sos*
+# PENDIENTE
 ```
 ```{r CompletePortfolio_GRAPHS}
+
 ```
 
 # Sample data
 
 Now, we consider our main database. This is the data from where we intend to develop our credit risk model; it describes credits originated from January 2013 to April 2021 *individually*, characterizing each beneficiary by different variables like age, gender, type of dwelling, etc.
 
-In theory, this data base should be exactly the same as the data analyzed at the beginning, reported in "Sistema de Información Infonavit 2013/01-2021/04". However, we do not expect this database to be distributed exactly the same as the complete portfolio information. We intend to manipulate this sample to best resemble the complete portfolio, so that the credit risk model can more accurately represent reality.
+In theory, this data base should be exactly the same as the data analyzed at the beginning, reported in "Sistema de Información Infonavit" for 2013/01-2021/04. However, we do not expect this database to be distributed exactly the same as the **complete portfolio** information. We intend to manipulate this sample to best resemble the complete portfolio, so that the credit risk model can more accurately represent reality.
 
-## Data
+## Data Analysis
 ```{r LoadingData3}
 sample<-readRDS(file="DATA/MUESTRA.Rds")
 head(sample)
@@ -791,7 +803,6 @@ str(sample)
 summary(sample)
 ```
 
-## Data Analysis
 ```{r}
 # GRÁFICAS DE GABRIEL* Pegar su code*
 ```
@@ -816,7 +827,7 @@ summary(sample)
 ```{r}
 ```
 
-## Regional Analysis
+## Regional Analysis & Clusters
 ```{r}
 ```
 
