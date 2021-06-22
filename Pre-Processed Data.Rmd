@@ -817,6 +817,10 @@ summary(sample)
 # Luly
 ```
 
+## Subsidies
+```{r}
+```
+
 # Credit Risk Model
 
 ## Logistic Regression
