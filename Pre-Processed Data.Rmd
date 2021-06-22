@@ -48,7 +48,7 @@ library("ggrepel")
 
 # Data Analysis 
 
-## Data Reported in Sistema de Información Infonavit 2013/01-2021/04
+## Data Reported in Sistema de Información Infonavit: 2013/01-2021/04
 
 Information regarding all mortgages originated by Infonavit from January 2013 to April 2021.
 
@@ -759,7 +759,7 @@ timeseries_NCTotal<-ggplot(data=NCTotal)+
 timeseries_NCTotal
 ```
 
-## "Sistema de Información Infonavit": Complete Portfolio Analysis
+## Data Reported in Sistema de Información Infonavit: Complete Portfolio Analysis
 
 https://portalmx.infonavit.org.mx/wps/portal/infonavit.web/transparencia/estaditicas/!ut/p/z1/jY_BCsIwEEQ_aTdNSdZjUmtalKQFQ-tepCcJaPUgfr8iXjwYO7eBNzMMMIzA8_RIp-mervN0fvkDq6NyiE1VCh_MtsSebIdWd1IZDcMbKAjRWRTeUUNoNnVbr3aycFEAL8njDxlcls8AnK8fgL8nnCXC3u29rUKQtNYfIHfx38jtEuOIqX0C2OrEmg!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/
 
