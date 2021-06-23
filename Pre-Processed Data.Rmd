@@ -50,11 +50,15 @@ library("ggrepel")
 
 ## Data Reported in Sistema de Información Infonavit: 2013/01-2021/04
 
-Information regarding all mortgages originated by Infonavit from January 2013 to April 2021.
+First we analyze information regarding all mortgages originated by Infonavit **from January 2013 to April 2021**. Source: https://portalmx.infonavit.org.mx/wps/portal/infonavit.web/el-instituto/el-infonavit/SII/!ut/p/z1/pZBBDoIwFETP4gn-FJHWJRosFQKiqUA3pitCoujCeH7RJcSKcXY_eTN_MmSoItPZR9vYe3vt7Lm_axOcAgnEa59lQh05iijwc873yAWncgCkyQIFdonEFuzAQOYfv_am-T0ByBVYJkUsEG4iFS3TuSc1m-bHB4U_9x8Bxh1fkhm8GC_oBF4TvQHXBt9a3C66V4VWNbMnVfmrRQ!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/
 
-https://portalmx.infonavit.org.mx/wps/portal/infonavit.web/el-instituto/el-infonavit/SII/!ut/p/z1/pZBBDoIwFETP4gn-FJHWJRosFQKiqUA3pitCoujCeH7RJcSKcXY_eTN_MmSoItPZR9vYe3vt7Lm_axOcAgnEa59lQh05iijwc873yAWncgCkyQIFdonEFuzAQOYfv_am-T0ByBVYJkUsEG4iFS3TuSc1m-bHB4U_9x8Bxh1fkhm8GC_oBF4TvQHXBt9a3C66V4VWNbMnVfmrRQ!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/
+Variables:
+NC: Número de créditos
+MC: Monto de créditos
+NS: Número de subsidios
+MS: Monto de subsidios
 
-```{r LoadingData1}
+```{r LoadingData1, include=FALSE}
 # Número de Créditos Formalizados
 NCTotal<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 1))
 MCTipoProducto<-as.data.frame(read_excel("DATA/NumeroDeCreditosFormalizados.xlsx", sheet = 2))
@@ -147,7 +151,10 @@ ASV<-as.data.frame(read_excel("DATA/AdminSubcuentaDeVivienda.xlsx", sheet = 1))
 ```
 
 ### Number of Credits Granted 
-```{r TotalsNC_CODE}
+
+Website variable description: Número de créditos del Infonavit aprobados y signados. Incluye los productos hipotecarios para vivienda nueva o existente, créditos cofinanciados, créditos coparticipados,mejoramientos y autoproducción. Cifras preliminares.
+
+```{r TotalsNC_CODE, include=FALSE}
 # Por Estado
 barplot_NC_Estado<-ggplot(data=NC_Estado)+
   geom_bar(aes(x=reorder(Estado,-NC),y=NC,fill=Estado),stat = "identity")+
@@ -196,7 +203,7 @@ NC_TP$percent=percent_TP
 piechart_NC_TP<-ggplot(data=NC_TP, aes(x="", y=NC, fill=TipoProducto)) +
   geom_bar(stat="identity", width=1) +
   coord_polar("y", start=0)+
-  geom_label_repel(aes(label = percent_TP), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  geom_label_repel(aes(label = percent_TP), size=3.5, show.legend = F, position = position_stack(vjust = 0.5)) +
   guides(fill = guide_legend(title = "Product Type"))+
   scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
   labs(
@@ -220,7 +227,7 @@ NC_CV$percent=percent_CV
 piechart_NC_CV<-ggplot(data=NC_CV, aes(x="", y=NC, fill=ClasificacionVivienda)) +
   geom_bar(stat="identity", width=1) +
   coord_polar("y", start=0)+
-  geom_label_repel(aes(label = percent_CV), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  geom_label_repel(aes(label = percent_CV), size=3.5, show.legend = F, position = position_stack(vjust = 0.5)) +
   guides(fill = guide_legend(title = "Dwelling Classification"))+
   scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
   labs(
@@ -244,7 +251,7 @@ NC_L$percent=percent_L
 piechart_NC_L<-ggplot(data=NC_L, aes(x="", y=NC, fill=Linea)) +
   geom_bar(stat="identity", width=1) +
   coord_polar("y", start=0)+
-  geom_label_repel(aes(label = percent_L), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  geom_label_repel(aes(label = percent_L), size=3.5, show.legend = F, position = position_stack(vjust = 0.5)) +
   guides(fill = guide_legend(title = "Credit Line"))+
   scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
   labs(
@@ -314,7 +321,10 @@ barplot_NC_Edad
 ```
 
 ### Credit Amount (MXN)
-```{r TotalsMC_CODE}
+
+Website variable description: Recursos del fondo para financiar una acción de vivienda y que constituye el pasivo que el trabajador adquiere con el Instituto. En productos cofinanciados y coparticipados, se considera únicamente la parte financiada por el Infonavit. No se consideran productos donde el Instituto únicamente provee la garantía hipotecaria. A precios corrientes. Cifras preliminares.
+
+```{r TotalsMC_CODE, include=FALSE}
 # Por Estado
 barplot_MC_Estado<-ggplot(data=MC_Estado)+
   geom_bar(aes(x=reorder(Estado,-MC),y=MC,fill=Estado),stat = "identity")+
@@ -322,6 +332,26 @@ barplot_MC_Estado<-ggplot(data=MC_Estado)+
   labs( x = "State", 
         y = "Credit amount (MXN)",
         title ="Total Amount of Granted Credit by State",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
+
+# Por Estado (Monto / Número de cuentas)
+MC_NC<-(MC_Estado$MC)/(NC_Estado$NC)
+MC_Estado$MC_NC<-MC_NC
+
+barplot_MC_Estado_av<-ggplot(data=MC_Estado)+
+  geom_bar(aes(x=reorder(Estado,-MC_NC),y=MC_NC,fill=Estado),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "(Total credit amount / Number of accounts)",
+        title ="Average credit amount per State",
         subtitle = "2013/01 - 2021/04"
         )+
   theme(
@@ -384,7 +414,7 @@ MC_CV$percent=percent_CV2
 piechart_MC_CV<-ggplot(data=MC_CV, aes(x="", y=MC, fill=ClasificacionVivienda)) +
   geom_bar(stat="identity", width=1) +
   coord_polar("y", start=0)+
-  geom_label_repel(aes(label = percent_CV2), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  geom_label_repel(aes(label = percent_CV2), size=3.5, show.legend = F, position = position_stack(vjust = 0.5)) +
   guides(fill = guide_legend(title = "Dwelling Classification"))+
   scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
   labs(
@@ -408,7 +438,7 @@ MC_L$percent=percent_L2
 piechart_MC_L<-ggplot(data=MC_L, aes(x="", y=MC, fill=Linea)) +
   geom_bar(stat="identity", width=1) +
   coord_polar("y", start=0)+
-  geom_label_repel(aes(label = percent_L2), size=3.5, show.legend = F, position = position_stack(vjust = 0.5),arrow=TRUE) +
+  geom_label_repel(aes(label = percent_L2), size=3.5, show.legend = F, position = position_stack(vjust = 0.5)) +
   guides(fill = guide_legend(title = "Credit Line"))+
   scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(8))+
   labs(
@@ -465,6 +495,7 @@ barplot_MC_Edad<-ggplot(data=MC_Edad)+
 ```
 ```{r TotalsMC_GRAPHS, fig.align='center'}
 barplot_MC_Estado
+barplot_MC_Estado_av
 barplot_MC_Estado_percent
 piechart_MC_TP
 piechart_MC_CV
@@ -476,7 +507,10 @@ barplot_MC_Edad
 ### Subsidies
 
 #### Number
-```{r TotalsNS_CODE}
+
+Website variable description: Número de créditos que recibieron el subsidio federal otorgado por la Comisión Nacional de Vivienda (Conavi). Se consideran únicamente los subsidios dispersados a través de un crédito de vivienda del Infonavit. Cifras preliminares.
+
+```{r TotalsNS_CODE, include=FALSE}
 
 # Por Estado
 barplot_NS_Estado<-ggplot(data=NS_Estado)+
@@ -495,7 +529,27 @@ barplot_NS_Estado<-ggplot(data=NS_Estado)+
     legend.position = "none"
     )
 
-# Por Estado como porcentaje
+# Por Estado como porcentaje del total de CREDITOS subsidiados y no subsidiados
+proportion<-(NS_Estado$NS)/(NC_Estado$NC)
+NS_Estado$prop<-proportion
+
+barplot_NS_Estado_prop<-ggplot(data=NS_Estado)+
+  geom_bar(aes(x=reorder(Estado,-prop),y=prop,fill=Estado),stat = "identity")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "(Subsidized Loans / Total Loans)",
+        title ="% of subsidized loans per State ",
+        subtitle = "2013/01 - 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )
+
+# Por Estado como porcentaje del total de subsidios
 percent_Estado3<-paste(round(100*(NS_Estado$NS/(sum(NS_Estado$NS))), 2), "%", sep="")
 NS_Estado$percent<-percent_Estado3
 
@@ -607,6 +661,7 @@ barplot_NS_Edad<-ggplot(data=NS_Edad)+
 ```
 ```{r TotalsNS_GRAPHS, fig.align='center'}
 barplot_NS_Estado
+barplot_NS_Estado_prop
 barplot_NS_Estado_percent
 piechart_NS_CV
 piechart_NS_L
@@ -615,7 +670,10 @@ barplot_NS_Edad
 ```
 
 #### Amount ($MXN)
-```{r TotalsMS_CODE}
+
+Website variable description: Monto de subsidio del gobierno federal otorgado por la Comisión Nacional de Vivienda (Conavi), como complemento a un crédito Infonavit. Se consideran únicamente los subsidios dispersados a través de un crédito de vivienda del Infonavit. A precios corrientes. Cifras preliminares.
+
+```{r TotalsMS_CODE, include=FALSE}
 # Por Estado
 barplot_MS_Estado<-ggplot(data=MS_Estado)+
   geom_bar(aes(x=reorder(Estado,-MS),y=MS,fill=Estado),stat = "identity")+
@@ -752,7 +810,7 @@ barplot_MS_I
 barplot_MS_Edad
 ```
 
-Solo para ver seasonality en el número de créditos otorgados por mes:
+Solo para ver **seasonality** en el número de créditos otorgados por mes:
 ```{r TimeSeries, fig.align='center'}
 timeseries_NCTotal<-ggplot(data=NCTotal)+
   geom_line(aes(x=Fecha,y=TotalNacional))
@@ -761,38 +819,59 @@ timeseries_NCTotal
 
 ## Data Reported in Sistema de Información Infonavit: Complete Portfolio Analysis
 
-https://portalmx.infonavit.org.mx/wps/portal/infonavit.web/transparencia/estaditicas/!ut/p/z1/jY_BCsIwEEQ_aTdNSdZjUmtalKQFQ-tepCcJaPUgfr8iXjwYO7eBNzMMMIzA8_RIp-mervN0fvkDq6NyiE1VCh_MtsSebIdWd1IZDcMbKAjRWRTeUUNoNnVbr3aycFEAL8njDxlcls8AnK8fgL8nnCXC3u29rUKQtNYfIHfx38jtEuOIqX0C2OrEmg!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/
+Source: https://portalmx.infonavit.org.mx/wps/portal/infonavit.web/transparencia/estaditicas/!ut/p/z1/jY_BCsIwEEQ_aTdNSdZjUmtalKQFQ-tepCcJaPUgfr8iXjwYO7eBNzMMMIzA8_RIp-mervN0fvkDq6NyiE1VCh_MtsSebIdWd1IZDcMbKAjRWRTeUUNoNnVbr3aycFEAL8njDxlcls8AnK8fgL8nnCXC3u29rUKQtNYfIHfx38jtEuOIqX0C2OrEmg!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/
 
-Leaving behind the database of "otorgamiento de crédito" we now consider the information reported in the section "Estadísticas", which gives portfolio operating indicators of Infonavit's **complete** portfolio. The database decomposes Infonavit's portfolio by: past due portfolio (vencida), extension portfolio (prórrroga) and current portfolio (vigente). 
+Leaving behind the database of NC, MC, NS, MS -> we now consider the information reported in the section "Estadísticas" of Sistema de Información Infonavit, which gives operating indicators of Infonavit's **complete** portfolio. 
 
-Note that, before, we were analyzing credits originated from January 2013 to April 2021, but this new database includes mortgages originated **before** 2013, considering the **complete portfolio** as of 30th of April, 2021.
+This database decomposes Infonavit's portfolio by: past due portfolio (vencida), extension portfolio (prórrroga) and current portfolio (vigente). 
 
-```{r LoadingData2}
+Note that at the beginning of this document we were analyzing credits originated from January 2013 to April 2021, but now this new database includes mortgages originated **before** 2013, considering the **complete portfolio** as of 30th of April, 2021.
+
+Note: ICV stands for índice de cartera vencida
+
+```{r LoadingData2, include=FALSE}
 # Complete Portfolio (CP) composition
-CP_cuentas<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 1))
-CP_saldos<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 2))
+# C Cuentas, S Saldos
+C_21<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 1))
+C_20<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 2))
+C_19<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 3))
+C_18<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 4))
+C<-rbind(C_21,C_20,C_19,C_18)
+
+S_21<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 5))
+S_20<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 6))
+S_19<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 7))
+S_18<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 8))
+S<-rbind(S_21,S_20,S_19,S_18)
+
+anual_C<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 9))
+anual_S<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 10))
 ```
-```{r CompletePortfolio_CODE}
-# Panel con cuatro gráficas, una gráfica por año: Barras por estado con el total 
-# de cartera en número de cuentas. Cada barra apilada por vigente + prórroga + vencida
-# PENDIENTE
 
-# Panel con cuatro gráficas, una gráfica por año: Barras por estado con el total 
-# de cartera en saldo (mdp MXN). Cada barra apilada por vigente + prórroga + vencida
-# PENDIENTE
+```{r}
+head(C)
+head(S)
+```
 
-# Gráfica con la sheet 2 del excel, pero sos*
-# PENDIENTE
+```{r CompletePortfolio_CODE, include=FALSE}
+# Cuentas
+## Portafolio
+
+## ICV
+
+#Saldos
+## Portafolio
+
+## ICV
 ```
 ```{r CompletePortfolio_GRAPHS}
-
 ```
 
 # Sample data
 
-Now, we consider our main database. This is the data from where we intend to develop our credit risk model; it describes credits originated from January 2013 to April 2021 *individually*, characterizing each beneficiary by different variables like age, gender, type of dwelling, etc.
+Now, we consider our main database. This is the data from where we intend to develop our credit risk model; it describes credits originated from January 2013 to April 2021 *individually*, characterizing each beneficiary by different variables like age, gender, type of dwelling, etc. Source: https://sniiv.conavi.gob.mx/reportes/datos_abiertos.aspx
 
-In theory, this data base should be exactly the same as the data analyzed at the beginning, reported in "Sistema de Información Infonavit" for 2013/01-2021/04. However, we do not expect this database to be distributed exactly the same as the **complete portfolio** information. We intend to manipulate this sample to best resemble the complete portfolio, so that the credit risk model can more accurately represent reality.
+In theory, this data base should be exactly the same as the data analyzed at the beginning, reported in "Sistema de Información Infonavit" for 2013/01-2021/04 in Number and Amount of Credits (NC & MC). However, we do not expect this database to be distributed exactly the same as the **complete portfolio** information. We intend to manipulate this sample to best resemble the complete portfolio, so that the credit risk model can more accurately represent reality.
 
 ## Data Analysis
 ```{r LoadingData3}
