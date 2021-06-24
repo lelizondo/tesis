@@ -882,9 +882,347 @@ str(sample)
 summary(sample)
 ```
 
-```{r}
-# GRÁFICAS DE GABRIEL* Pegar su code*
+```{r libraries}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(RColorBrewer)
+library(forcats)
 ```
+
+
+```{r Créditos por Modalidad}
+colourCount <- length(unique(sample$MODALIDAD))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample2 <- sample %>% 
+  group_by(MODALIDAD) %>%
+  mutate(count_name_occurr = n())
+
+bar_modalidad <- ggplot(sample2, aes(x=reorder(MODALIDAD,-count_name_occurr),fill=MODALIDAD))
+
+bar_modalidad + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) +
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "none") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Modalidad") + 
+  theme(plot.title=element_text(hjust = 0.5))  
+```
+
+```{r Créditos por Destino}
+
+colourCount <- length(unique(sample$DESTINO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample4 <- sample %>% 
+  group_by(DESTINO) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample4, aes(x=reorder(DESTINO,-count_name_occurr),fill=DESTINO))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "none") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Destino") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+```{r Créditos por Tipo}
+colourCount <- length(unique(sample$TIPO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample2 <- sample %>% 
+  group_by(TIPO) %>%
+  mutate(count_name_occurr = n())
+
+bar_modalidad <- ggplot(sample2, aes(x=reorder(TIPO,-count_name_occurr),fill=TIPO))
+
+bar_modalidad + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "none") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Tipo") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+```{r Créditos por Monto}
+hist_info <- hist(sample$MONTO,xlim=c(0,10000),breaks=4000)       
+hist_info$density <- hist_info$counts/sum(hist_info$counts) * 100 
+plot(hist_info, freq = FALSE,xlim=c(0,5000000),xaxt="n",ylim=c(0,30),ylab="% / Cantidad Total de Créditos",xlab="Monto",main="Distribución de los Montos de los Créditos")   
+axis(side=1, at=axTicks(1), labels=formatC(axTicks(1), format="d", big.mark=','))
+```
+
+```{r Créditos por Entidad}
+colourCount <- length(unique(sample$ENTIDAD))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(ENTIDAD) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(ENTIDAD,-count_name_occurr),fill=ENTIDAD))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "none") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Estado") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+
+```{r Créditos por Entidad y Tipo}
+colourCount <- length(unique(sample$TIPO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(ENTIDAD) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(ENTIDAD,-count_name_occurr),fill=TIPO))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "right") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Estado y Tipo") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+```{r Créditos por Género}
+colourCount <- length(unique(sample$GENERO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(GENERO) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(GENERO,-count_name_occurr),fill=GENERO))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "none") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Género") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+
+``{r Créditos por Entidad y Género}
+colourCount <- length(unique(sample$GENERO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(ENTIDAD) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(ENTIDAD,-count_name_occurr),fill=GENERO))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "right") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Estado y Género") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+
+```{r Créditos por Estado y Edad}
+
+colourCount <- length(unique(sample$EDAD))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(ENTIDAD) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(ENTIDAD,-count_name_occurr),fill=EDAD))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "right") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Estado y Edad") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+```{r Créditos por Edad}
+colourCount <- length(unique(sample$EDAD))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(EDAD) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(EDAD,-count_name_occurr),fill=EDAD))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "none") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Edad") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+
+
+```{r Créditos por Edad y Género}
+colourCount <- length(unique(sample$GENERO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(EDAD) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(EDAD,-count_name_occurr),fill=GENERO))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "right") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Edad y Género") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+```{r Créditos por Ingreso}
+colourCount <- length(unique(sample$INGRESO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(INGRESO) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(INGRESO,-count_name_occurr),fill=INGRESO))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "none") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Ingreso") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+
+```{r Créditos por Ingreso y Edad}
+colourCount <- length(unique(sample$EDAD))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(INGRESO) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(INGRESO,-count_name_occurr),fill=EDAD))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "right") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Ingreso y Edad") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+
+```{r Créditos por Ingreso y Género}
+colourCount <- length(unique(sample$GENERO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(INGRESO) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(INGRESO,-count_name_occurr),fill=GENERO))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "right") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Ingreso y Género") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+
+```{r Créditos por Ingreso y Tipo}
+colourCount <- length(unique(sample$TIPO))
+getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+
+sample3 <- sample %>% 
+  group_by(INGRESO) %>%
+  mutate(count_name_occurr = n())
+
+bar_estado <- ggplot(sample3, aes(x=reorder(INGRESO,-count_name_occurr),fill=TIPO))
+
+bar_estado + 
+  geom_bar(aes(y=(..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) + 
+  ylab("% / Total de Créditos") + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
+  theme(legend.position = "right") +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle("Distribución de Créditos otorgados por Ingreso y Tipo") + 
+  theme(plot.title=element_text(hjust = 0.5))
+```
+
+
+
+
+
+
+
 
 ## Adjust Sample to Match Population's Characteristics 
 ```{r}
