@@ -44,6 +44,7 @@ library("scales")
 library("RColorBrewer")
 library("forcats")
 library("ggrepel")
+library("gridExtra")
 ```
 
 # Data Analysis 
@@ -315,8 +316,8 @@ barplot_NC_Estado
 barplot_NC_Estado_percent
 piechart_NC_TP
 piechart_NC_CV
-barplot_NC_I
 piechart_NC_L
+barplot_NC_I
 barplot_NC_Edad
 ```
 
@@ -568,7 +569,8 @@ barplot_NS_Estado_percent<-ggplot(data=NS_Estado)+
     plot.title = element_text(hjust=0.5),
     plot.subtitle=element_text(hjust=0.5),
     legend.position = "none"
-    )
+    )+
+  ylim(0,110000)
 
 # Por Tipo de Producto
 # No Aplica: Todos son crédito tradicional
@@ -830,7 +832,7 @@ Note that at the beginning of this document we were analyzing credits originated
 Note: ICV stands for índice de cartera vencida
 
 ```{r LoadingData2, include=FALSE}
-# Complete Portfolio (CP) composition
+# Complete Portfolio (CP) composition 2018-2021
 # C Cuentas, S Saldos
 C_21<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 1))
 C_20<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 2))
@@ -847,24 +849,68 @@ S<-rbind(S_21,S_20,S_19,S_18)
 anual_C<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 9))
 anual_S<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 10))
 ```
+```{r CompletePortfolio_CODE, include = FALSE}
+## Por Estado y Año Cuentas *PENDIENTE**PENDIENTE*
+# 2018
+barC18<-
+# 2019
+barC19<-
+# 2020
+barC20<-
+# 2021
+barC21<-
 
-```{r}
-head(C)
-head(S)
-```
+## Por Estado y Año Saldos *PENDIENTE**PENDIENTE*
+#2018
+barS18<-
+# 2019
+barS19<-
+# 2020
+barS20<-
+# 2021
+barS21<-
 
-```{r CompletePortfolio_CODE, include=FALSE}
-# Cuentas
-## Portafolio
+## Cuentas - Final Anual (2018-2021)
+anualc<-ggplot(data=anual_C,x=Fecha,y=ICV_Cuentas)+
+  geom_line(aes(x=Fecha,y=ICV_Cuentas), color="gray47")+
+  geom_point(aes(x=Fecha,y=ICV_Cuentas,shape="1", size = 5), color="darkslategray4")+
+  labs(
+    x="Year",
+    y="Past Due Portfolio Index",
+    title="Infonavit's Past Due Portfolio Index",
+    subtitle="In Number of Accounts"
+  )+
+  theme(
+    axis.text.x=element_text(size=10,angle=45,hjust=1),
+    axis.text.y=element_text(size=10,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+  )
 
-## ICV
-
-#Saldos
-## Portafolio
-
-## ICV
+## Saldos - Final Anual (2003-2021)
+anuals<-ggplot(data=anual_S,x=Fecha,y=ICV_Saldos)+
+  geom_line(aes(x=Fecha,y=ICV_Saldos), color="gray47")+
+  geom_point(aes(x=Fecha,y=ICV_Saldos,shape="1", size = 5), color="darkslategray4")+
+  labs(
+    x="Year",
+    y="Past Due Portfolio Index",
+    title="Infonavit's Past Due Portfolio Index",
+    subtitle="In Credit Amount ($MXN)"
+  )+
+  theme(
+    axis.text.x=element_text(size=10,angle=45,hjust=1),
+    axis.text.y=element_text(size=10,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+  )
 ```
 ```{r CompletePortfolio_GRAPHS}
+grid.arrange(barC18, barC19, barC20, barC21, ncol=2)
+grid.arrange(barS18, barS19, barS20, barS21, ncol=2)
+anualc
+anuals
 ```
 
 # Sample data
@@ -874,23 +920,13 @@ Now, we consider our main database. This is the data from where we intend to dev
 In theory, this data base should be exactly the same as the data analyzed at the beginning, reported in "Sistema de Información Infonavit" for 2013/01-2021/04 in Number and Amount of Credits (NC & MC). However, we do not expect this database to be distributed exactly the same as the **complete portfolio** information. We intend to manipulate this sample to best resemble the complete portfolio, so that the credit risk model can more accurately represent reality.
 
 ## Data Analysis
-```{r LoadingData3}
+```{r LoadingData3, include = FALSE}
 sample<-readRDS(file="DATA/MUESTRA.Rds")
 head(sample)
 tail(sample)
 str(sample)
 summary(sample)
 ```
-
-```{r libraries}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(scales)
-library(RColorBrewer)
-library(forcats)
-```
-
 
 ```{r Créditos por Modalidad}
 colourCount <- length(unique(sample$MODALIDAD))
@@ -971,23 +1007,22 @@ colourCount <- length(unique(sample$ENTIDAD))
 getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
 
 sample3 <- sample %>% 
-  group_by(ENTIDAD) %>%
+  group_by(CLAVE_ENTIDAD) %>%
   mutate(count_name_occurr = n())
 
-bar_estado <- ggplot(sample3, aes(x=reorder(ENTIDAD,-count_name_occurr),fill=ENTIDAD))
+bar_estado <- ggplot(sample3, aes(x=reorder(CLAVE_ENTIDAD,-count_name_occurr),fill=CLAVE_ENTIDAD))
 
 bar_estado + 
   geom_bar(aes(y=(..count..)/sum(..count..))) + 
   scale_y_continuous(labels=scales::percent) + 
   ylab("% / Total de Créditos") + 
-  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colourCount)) + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(32)) + 
   theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1)) + 
   theme(legend.position = "none") +
   theme(axis.title.x = element_blank()) + 
   ggtitle("Distribución de Créditos otorgados por Estado") + 
   theme(plot.title=element_text(hjust = 0.5))
 ```
-
 
 ```{r Créditos por Entidad y Tipo}
 colourCount <- length(unique(sample$TIPO))
@@ -1033,8 +1068,7 @@ bar_estado +
   theme(plot.title=element_text(hjust = 0.5))
 ```
 
-
-``{r Créditos por Entidad y Género}
+```{r Créditos por Entidad y Género}
 colourCount <- length(unique(sample$GENERO))
 getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
 
@@ -1055,7 +1089,6 @@ bar_estado +
   ggtitle("Distribución de Créditos otorgados por Estado y Género") + 
   theme(plot.title=element_text(hjust = 0.5))
 ```
-
 
 ```{r Créditos por Estado y Edad}
 
@@ -1102,8 +1135,6 @@ bar_estado +
   theme(plot.title=element_text(hjust = 0.5))
 ```
 
-
-
 ```{r Créditos por Edad y Género}
 colourCount <- length(unique(sample$GENERO))
 getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
@@ -1148,7 +1179,6 @@ bar_estado +
   theme(plot.title=element_text(hjust = 0.5))
 ```
 
-
 ```{r Créditos por Ingreso y Edad}
 colourCount <- length(unique(sample$EDAD))
 getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
@@ -1170,7 +1200,6 @@ bar_estado +
   ggtitle("Distribución de Créditos otorgados por Ingreso y Edad") + 
   theme(plot.title=element_text(hjust = 0.5))
 ```
-
 
 ```{r Créditos por Ingreso y Género}
 colourCount <- length(unique(sample$GENERO))
@@ -1194,7 +1223,6 @@ bar_estado +
   theme(plot.title=element_text(hjust = 0.5))
 ```
 
-
 ```{r Créditos por Ingreso y Tipo}
 colourCount <- length(unique(sample$TIPO))
 getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
@@ -1216,13 +1244,6 @@ bar_estado +
   ggtitle("Distribución de Créditos otorgados por Ingreso y Tipo") + 
   theme(plot.title=element_text(hjust = 0.5))
 ```
-
-
-
-
-
-
-
 
 ## Adjust Sample to Match Population's Characteristics 
 ```{r}
