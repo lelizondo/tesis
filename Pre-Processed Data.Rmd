@@ -829,7 +829,7 @@ This database decomposes Infonavit's portfolio by: past due portfolio (vencida),
 
 Note that at the beginning of this document we were analyzing credits originated from January 2013 to April 2021, but now this new database includes mortgages originated **before** 2013, considering the **complete portfolio** as of 30th of April, 2021.
 
-Note: ICV stands for índice de cartera vencida
+Note: ICV stands for índice de cartera vencida (Vencida / Total)
 
 ```{r LoadingData2, include=FALSE}
 # Complete Portfolio (CP) composition 2018-2021
@@ -848,27 +848,197 @@ S<-rbind(S_21,S_20,S_19,S_18)
 
 anual_C<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 9))
 anual_S<-as.data.frame(read_excel("DATA/CarteraVencida.xlsx", sheet = 10))
+
+# AJUSTE: data tidy para gráfica
+C_21_2<-subset(C_21,select=-c(Fecha,Total,ICV))
+C_20_2<-subset(C_20,select=-c(Fecha,Total,ICV))
+C_19_2<-subset(C_19,select=-c(Fecha,Total,ICV))
+C_18_2<-subset(C_18,select=-c(Fecha,Total,ICV))
+
+S_21_2<-subset(S_21,select=-c(Fecha,Total,ICV))
+S_20_2<-subset(S_20,select=-c(Fecha,Total,ICV))
+S_19_2<-subset(S_19,select=-c(Fecha,Total,ICV))
+S_18_2<-subset(S_18,select=-c(Fecha,Total,ICV))
+
+C_21_3<-pivot_longer(C_21_2,cols = 2:4,names_to="Status",values_to = "Cuentas")
+C_20_3<-pivot_longer(C_20_2,cols = 2:4,names_to="Status",values_to = "Cuentas")
+C_19_3<-pivot_longer(C_19_2,cols = 2:4,names_to="Status",values_to = "Cuentas")
+C_18_3<-pivot_longer(C_18_2,cols = 2:4,names_to="Status",values_to = "Cuentas")
+
+S_21_3<-pivot_longer(S_21_2,cols = 2:4,names_to="Status",values_to = "Saldos")
+S_20_3<-pivot_longer(S_20_2,cols = 2:4,names_to="Status",values_to = "Saldos")
+S_19_3<-pivot_longer(S_19_2,cols = 2:4,names_to="Status",values_to = "Saldos")
+S_18_3<-pivot_longer(S_18_2,cols = 2:4,names_to="Status",values_to = "Saldos")
 ```
 ```{r CompletePortfolio_CODE, include = FALSE}
 ## Por Estado y Año Cuentas *PENDIENTE**PENDIENTE*
 # 2018
-barC18<-
+barC18<-ggplot(C_18_3, aes(fill = Status, y = Cuentas, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Accounts (#)",
+        title ="2018"
+        )+
+  theme(
+    axis.text.x=element_text(size=5,angle=45,hjust=1),
+    axis.text.y=element_text(size=7,angle=45),
+    plot.title = element_text(size=11,hjust=0.5),
+    axis.title.x = element_text(size=9),
+    axis.title.y = element_text(size=9),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=7)
+    )
 # 2019
-barC19<-
+barC19<-ggplot(C_19_3, aes(fill = Status, y = Cuentas, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Accounts (#)",
+        title ="2019"
+        )+
+  theme(
+    axis.text.x=element_text(size=5,angle=45,hjust=1),
+    axis.text.y=element_text(size=7,angle=45),
+    plot.title = element_text(size=11,hjust=0.5),
+    axis.title.x = element_text(size=9),
+    axis.title.y = element_text(size=9),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=7)
+    )
 # 2020
-barC20<-
+barC20<-ggplot(C_20_3, aes(fill = Status, y = Cuentas, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Accounts (#)",
+        title ="2020"
+        )+
+  theme(
+    axis.text.x=element_text(size=5,angle=45,hjust=1),
+    axis.text.y=element_text(size=7,angle=45),
+    plot.title = element_text(size=11,hjust=0.5),
+    axis.title.x = element_text(size=9),
+    axis.title.y = element_text(size=9),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=7)
+    )
 # 2021
-barC21<-
+barC21<-ggplot(C_21_3, aes(fill = Status, y = Cuentas, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Accounts (#)",
+        title ="2021"
+        )+
+  theme(
+    axis.text.x=element_text(size=5,angle=45,hjust=1),
+    axis.text.y=element_text(size=7,angle=45),
+    plot.title = element_text(size=11,hjust=0.5),
+    axis.title.x = element_text(size=9),
+    axis.title.y = element_text(size=9),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=7)
+    )
 
 ## Por Estado y Año Saldos *PENDIENTE**PENDIENTE*
 #2018
-barS18<-
+barS18<-ggplot(S_18_3, aes(fill = Status, y = Saldos, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Balance (million MXN)",
+        title ="2018"
+        )+
+  theme(
+    axis.text.x=element_text(size=5,angle=45,hjust=1),
+    axis.text.y=element_text(size=7,angle=45),
+    plot.title = element_text(size=11,hjust=0.5),
+    axis.title.x = element_text(size=9),
+    axis.title.y = element_text(size=9),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=7)
+    )
 # 2019
-barS19<-
+barS19<-ggplot(S_19_3, aes(fill = Status, y = Saldos, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Balance (million MXN)",
+        title ="2019"
+        )+
+  theme(
+    axis.text.x=element_text(size=5,angle=45,hjust=1),
+    axis.text.y=element_text(size=7,angle=45),
+    plot.title = element_text(size=11,hjust=0.5),
+    axis.title.x = element_text(size=9),
+    axis.title.y = element_text(size=9),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=7)
+    )
 # 2020
-barS20<-
+barS20<-ggplot(S_20_3, aes(fill = Status, y = Saldos, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Balance (million MXN)",
+        title ="2020"
+        )+
+  theme(
+    axis.text.x=element_text(size=5,angle=45,hjust=1),
+    axis.text.y=element_text(size=7,angle=45),
+    plot.title = element_text(size=11,hjust=0.5),
+    axis.title.x = element_text(size=9),
+    axis.title.y = element_text(size=9),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=7)
+    )
 # 2021
-barS21<-
+barS21<-ggplot(S_21_3, aes(fill = Status, y = Saldos, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Balance (million MXN)",
+        title ="2021"
+        )+
+  theme(
+    axis.text.x=element_text(size=5,angle=45,hjust=1),
+    axis.text.y=element_text(size=7,angle=45),
+    plot.title = element_text(size=11,hjust=0.5),
+    axis.title.x = element_text(size=9),
+    axis.title.y = element_text(size=9),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=7)
+    )
+
+## 2021 C Y S (más reciente)
+barC21_solo<-ggplot(C_21_3, aes(fill = Status, y = Cuentas, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Accounts (#)",
+        title ="Complete Portfolio Composition",
+        subtitle="Number of accounts - 2021"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(size=13,hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.title.x = element_text(size=11),
+    axis.title.y = element_text(size=11),
+    legend.title = element_text(size=10),
+    legend.text = element_text(size=10)
+    )
+
+barS21_solo<-ggplot(S_21_3, aes(fill = Status, y = Saldos, x = Estado)) +
+  geom_bar(position = "stack", stat = "identity")+
+  labs( x = "State", 
+        y = "Balance (million MXN)",
+        title ="Complete Portfolio Composition",
+        subtitle="Balance ($MXN) - 2021"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(size=13,hjust=0.5),
+    plot.subtitle = element_text(hjust=0.5),
+    axis.title.x = element_text(size=11),
+    axis.title.y = element_text(size=11),
+    legend.title = element_text(size=10),
+    legend.text = element_text(size=10)
+    )
 
 ## Cuentas - Final Anual (2018-2021)
 anualc<-ggplot(data=anual_C,x=Fecha,y=ICV_Cuentas)+
@@ -909,6 +1079,8 @@ anuals<-ggplot(data=anual_S,x=Fecha,y=ICV_Saldos)+
 ```{r CompletePortfolio_GRAPHS}
 grid.arrange(barC18, barC19, barC20, barC21, ncol=2)
 grid.arrange(barS18, barS19, barS20, barS21, ncol=2)
+barC21_solo
+barS21_solo
 anualc
 anuals
 ```
