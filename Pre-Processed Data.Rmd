@@ -1076,6 +1076,48 @@ anuals<-ggplot(data=anual_S,x=Fecha,y=ICV_Saldos)+
     legend.position = "none"
   )
 ```
+```{r TOTAL, include=FALSE}
+# Número de cuentas por estado 2021/04, portafolio completo
+NC_21<-subset(C_21,select=-c(Fecha,Vigente,Prorroga,Vencida,ICV))
+NC_21$Percent=paste(round(100*(NC_21$Total/sum(NC_21$Total)), 2), "%", sep="")
+barNC_complete<-ggplot(data=NC_21)+
+  geom_bar(aes(x=reorder(Estado,-Total),y=Total,fill=Estado),stat = "identity")+
+  geom_text(aes(x=Estado,y=Total,label=Percent),hjust=-0.2, size=2.5,angle=90)+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "Number of Accounts",
+        title ="Number of Accounts in Complete Portfolio",
+        subtitle = "As of 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )+
+  ylim(0,760000)
+# Saldo de cuentas por estado 2021/04, portafolio completo
+MC_21<-subset(S_21,select=-c(Fecha,Vigente,Prorroga,Vencida,ICV))
+MC_21$Percent=paste(round(100*(MC_21$Total/sum(MC_21$Total)), 2), "%", sep="")
+barMC_complete<-ggplot(data=MC_21)+
+  geom_bar(aes(x=reorder(Estado,-Total),y=Total,fill=Estado),stat = "identity")+
+  geom_text(aes(x=Estado,y=Total,label=Percent),hjust=-0.2, size=2.5,angle=90)+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set3"))(32))+
+  labs( x = "State", 
+        y = "Credit Balance (MXN)",
+        title ="Total Balance in Complete Portfolio",
+        subtitle = "As of 2021/04"
+        )+
+  theme(
+    axis.text.x=element_text(size=8,angle=45,hjust=1),
+    axis.text.y=element_text(size=8,angle=45),
+    plot.title = element_text(hjust=0.5),
+    plot.subtitle=element_text(hjust=0.5),
+    legend.position = "none"
+    )+
+  ylim(0,225000)
+```
 ```{r CompletePortfolio_GRAPHS}
 grid.arrange(barC18, barC19, barC20, barC21, ncol=2)
 grid.arrange(barS18, barS19, barS20, barS21, ncol=2)
@@ -1083,6 +1125,9 @@ barC21_solo
 barS21_solo
 anualc
 anuals
+
+barNC_complete
+barMC_complete
 ```
 
 # Sample data
