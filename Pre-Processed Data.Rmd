@@ -1118,6 +1118,8 @@ barMC_complete<-ggplot(data=MC_21)+
     )+
   ylim(0,225000)
 ```
+
+
 ```{r CompletePortfolio_GRAPHS}
 grid.arrange(barC18, barC19, barC20, barC21, ncol=2)
 grid.arrange(barS18, barS19, barS20, barS21, ncol=2)
@@ -1130,6 +1132,17 @@ barNC_complete
 barMC_complete
 ```
 
+```{r MAPAS}
+library("devtools")
+install_github("diegovalle/mxmaps")
+library("ellipsis")
+library("mxmaps")
+
+ICV_C21<-subset(C_21,select=-c(Fecha,Vigente,Prorroga,Vencida,Total))
+ICV_C21
+
+# falta cambiar estados a clave inegi y graficar con mxstate_choropleth(ICV_C21), luego lo mismo para más data como S_21, etc.
+```
 # Sample data
 
 Now, we consider our main database. This is the data from where we intend to develop our credit risk model; it describes credits originated from January 2013 to April 2021 *individually*, characterizing each beneficiary by different variables like age, gender, type of dwelling, etc. Source: https://sniiv.conavi.gob.mx/reportes/datos_abiertos.aspx
