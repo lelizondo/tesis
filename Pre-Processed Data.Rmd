@@ -1133,14 +1133,33 @@ barMC_complete
 ```
 
 ```{r MAPAS}
-library("devtools")
-install_github("diegovalle/mxmaps")
+# Instalar u UPDATEAR los pquetes cli y ellipsis, luego cargarlos:
 library("ellipsis")
+library("cli")
+
+# Luego instalar el paquete devtools:
+library("devtools")
+# Warning: si no te corre devtools updatea los paquetes que salgan en el mensaje de error!!
+
+# Luego de tener devtools, instala el paquete de los mapas directo de github:
+install_github("diegovalle/mxmaps")
 library("mxmaps")
 
-ICV_C21<-subset(C_21,select=-c(Fecha,Vigente,Prorroga,Vencida,Total))
-ICV_C21
+# Ahora, poner en la TERMILAL: brew install pkg-config
+# Luego poner en la TERMINAL: brew install gdal
 
+library("devtools")
+install.packages("sf", configure.args = "--with-proj-lib=/usr/local/lib/")
+install_github("r-spatial/sf", configure.args = "--with-proj-lib=/usr/local/lib/")
+install.packages("rgdal", configure.args = c("--with-proj-lib=/usr/local/lib/", "--with-proj-include=/usr/local/include/"))
+library("gdal")
+library("sf")
+
+ICV_C21<-subset(C_21,select=-c(Fecha,Vigente,Prorroga,Vencida,Total,Estado))
+Clave_Estado<-c(01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32)
+ICV_C21$Clave=Clave_Estado
+
+mxstate_choropleth(ICV_C21)
 # falta cambiar estados a clave inegi y graficar con mxstate_choropleth(ICV_C21), luego lo mismo para más data como S_21, etc.
 ```
 # Sample data
