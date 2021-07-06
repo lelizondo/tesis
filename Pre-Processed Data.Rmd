@@ -1197,7 +1197,7 @@ library("mxmaps")
 mxstate_choropleth(MC_1321,
                    num_colors=1,
                    title="Monto de créditos originados 2013/01 - 2021/04 ($MXN)",
-                   legend="# de cred.")
+                   legend="$MXN")
 
 # Número de subsidios 2013/01 - 2021/04
 NS_1321<-subset(NS_Estado,select=-c(percent,Estado,NS))
@@ -1207,7 +1207,7 @@ library("mxmaps")
 mxstate_choropleth(NS_1321,
                    num_colors=1,
                    title="Número de subsidios como porcentaje del total de créditos 2013/01 - 2021/04",
-                   legend="# de cred.")
+                   legend="%")
 
 # Monto de subsidios otorgados 2013/01 - 2021/04
 MS_Estado$prop<-MS_Estado$MS/MC_Estado$MC
@@ -1218,7 +1218,7 @@ library("mxmaps")
 mxstate_choropleth(MS_1321,
                    num_colors=1,
                    title="Monto de subsidios como porcentaje del monto total 2013/01 - 2021/04",
-                   legend="# de cred.")
+                   legend="%")
 ```
 # Sample data
 
