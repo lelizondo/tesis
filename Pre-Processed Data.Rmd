@@ -1163,6 +1163,7 @@ ICV_C21<-subset(C_21,select=-c(Fecha,Vigente,Prorroga,Vencida,Total,Estado))
 Clave_Estado<-c(01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32)
 ICV_C21$Clave=Clave_Estado
 colnames(ICV_C21)<-c("value","region")
+library("mxmaps")
 mxstate_choropleth(ICV_C21,
                    num_colors=1,
                    title="Índice de cartera vencida por estado (número de cuentas)",
@@ -1172,6 +1173,7 @@ mxstate_choropleth(ICV_C21,
 ICV_S21<-subset(S_21,select=-c(Fecha,Vigente,Prorroga,Vencida,Total,Estado))
 ICV_S21$Clave=Clave_Estado
 colnames(ICV_S21)<-c("value","region")
+library("mxmaps")
 mxstate_choropleth(ICV_S21,
                    num_colors=1,
                    title="Índice de cartera vencida por estado (saldos MXN)",
