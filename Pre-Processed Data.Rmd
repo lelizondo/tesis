@@ -1215,7 +1215,7 @@ MS_1321<-subset(MS_Estado,select=-c(Estado,MS,percent))
 MS_1321$region=Clave_Estado
 colnames(MS_1321)=c("value","region")
 library("mxmaps")
-mxstate_choropleth(NS_1321,
+mxstate_choropleth(MS_1321,
                    num_colors=1,
                    title="Monto de subsidios como porcentaje del monto total 2013/01 - 2021/04",
                    legend="# de cred.")
