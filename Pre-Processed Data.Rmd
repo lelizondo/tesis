@@ -1153,7 +1153,9 @@ library("devtools")
 install.packages("sf", configure.args = "--with-proj-lib=/usr/local/lib/")
 install_github("r-spatial/sf", configure.args = "--with-proj-lib=/usr/local/lib/")
 install.packages("rgdal", configure.args = c("--with-proj-lib=/usr/local/lib/", "--with-proj-include=/usr/local/include/"))
+```
 
+```{r}
 # PASO7: Ahora sí los datos. Las columnas tienen que llamarse "value" y "region" para que lo lea y luego la función que se usa es mxstate_choropleth():
 
 # ICV CUENTAS a abril 2021
