@@ -1233,9 +1233,11 @@ head(sample)
 tail(sample)
 str(sample)
 summary(sample)
-
 prueba<-subset(sample,sample$MONTO!=0)
-
+sample
+prueba2<-subset(sample,sample$AÑO=="2020")
+nrow(prueba2)
+prueba2
 sample99 <- sample %>% 
   group_by(CLAVE_ENTIDAD) %>%
   mutate(count_name_occurr = n())

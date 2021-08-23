@@ -1,0 +1,191 @@
+---
+title: "Variables Gabriel"
+output: pdf_document
+---
+
+
+```{r}
+library("quantmod")
+library("tseries")
+library("urca")
+```
+
+
+```{r}
+library(readxl)
+datos <- read_excel("Data Luly.xlsx", sheet = 2)
+head(datos)
+```
+
+
+# CV (Se hace estacionaria con 1 diferencia)
+
+```{r}
+var <- ts(datos[,1:2],start=c(2005,2),frequency=4)
+head(var)
+```
+
+
+```{r}
+var <- diff(var)
+```
+
+```{r}
+y = t(var)
+colnames(y) = y[1,]
+y = y[-1,]
+x = ts(y)
+```
+
+```{r}
+summary(ur.df(x))
+```
+
+
+
+# Desempleo (Se hace estacionaria con 1 diferencia)
+
+```{r}
+datos$CV <- NULL
+```
+
+```{r}
+var <- ts(datos[,1:2],start=c(2005,2),frequency=4)
+head(var)
+```
+
+```{r}
+var <- diff(var)
+```
+
+
+```{r}
+y = t(var)
+colnames(y) = y[1,]
+y = y[-1,]
+x = ts(y)
+```
+
+```{r}
+summary(ur.df(x))
+```
+
+
+
+
+# Inflacion (Se hace estacionaria con 1 diferencia)
+
+```{r}
+datos$Desempleo <- NULL
+```
+
+```{r}
+var <- ts(datos[,1:2],start=c(2005,2),frequency=4)
+head(var)
+```
+
+```{r}
+var <- diff(var)
+```
+
+
+```{r}
+y = t(var)
+colnames(y) = y[1,]
+y = y[-1,]
+x = ts(y)
+```
+
+```{r}
+summary(ur.df(x))
+```
+
+
+
+
+# PIB_var (Se hace estacionaria con 0 diferencia)
+
+```{r}
+datos$Inflacion <- NULL
+```
+
+```{r}
+var <- ts(datos[,1:2],start=c(2005,2),frequency=4)
+head(var)
+```
+
+```{r}
+y = t(var)
+colnames(y) = y[1,]
+y = y[-1,]
+x = ts(y)
+```
+
+```{r}
+summary(ur.df(x))
+```
+
+
+
+
+
+# IPV_var (Se hace estacionaria con 1 diferencia)
+
+```{r}
+datos$PIB_var <- NULL
+```
+
+```{r}
+var <- ts(datos[,1:2],start=c(2005,2),frequency=4)
+head(var)
+```
+
+```{r}
+var <- diff(var)
+```
+
+
+```{r}
+y = t(var)
+colnames(y) = y[1,]
+y = y[-1,]
+x = ts(y)
+```
+
+```{r}
+summary(ur.df(x))
+```
+
+
+
+# IPC_sub_var (Se hace estacionaria con 1 diferencia)
+
+```{r}
+datos$IPV_var <- NULL
+```
+
+```{r}
+var <- ts(datos[,1:2],start=c(2005,2),frequency=4)
+head(var)
+```
+
+```{r}
+var <- diff(var)
+```
+
+
+```{r}
+y = t(var)
+colnames(y) = y[1,]
+y = y[-1,]
+x = ts(y)
+```
+
+```{r}
+summary(ur.df(x))
+```
+
+
+
+
+
