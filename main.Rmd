@@ -34,7 +34,7 @@ options(tinytex.verbose = TRUE)
 \vspace{3cm}
 
 ```{r uni_logo, echo=F, out.width="20%"}
-knitr::include_graphics("img/escudoudem.jpg")
+knitr::include_graphics("CC-diss-rmd copy/img/escudoudem.jpg")
 ```
 
 \vspace{1cm}
@@ -109,41 +109,41 @@ no more than 250 words for the abstract
 
 \newpage
 
-```{r acknowledgments, child='acknowledgments.Rmd'}
+```{r acknowledgments, child='CC-diss-rmd copy/acknowledgments.Rmd'}
 ```
 
 \newpage
 
-```{r intro, child = 'introduction.Rmd'}
+```{r intro, child = 'CC-diss-rmd copy/introduction.Rmd'}
 ```
 \pagenumbering{arabic}
 
 \newpage
 
-```{r methods, child = 'methods.Rmd'}
+```{r methods, child = 'CC-diss-rmd copy/methods.Rmd'}
 ```
 
 \newpage
 
-```{r results, child = 'results.Rmd'}
+```{r results, child = 'CC-diss-rmd copy/results.Rmd'}
 ```
 
 \newpage
 
-```{r discussion, child = 'discussion.Rmd'}
+```{r discussion, child = 'CC-diss-rmd copy/discussion.Rmd'}
 ```
 
 \newpage
 
-```{r conclusion, child = 'conclusion.Rmd'}
+```{r conclusion, child = 'CC-diss-rmd copy/conclusion.Rmd'}
 ```
 
 \newpage
 
-```{r biblio, child = 'bibliography.Rmd'}
+```{r biblio, child = 'CC-diss-rmd copy/bibliography.Rmd'}
 ```
 
 \newpage
 
-```{r appendix, child = 'appendix.Rmd'}
+```{r appendix, child = 'CC-diss-rmd copy/appendix.Rmd'}
 ```
