@@ -564,7 +564,6 @@ CV_NL_diff1<-diff(CV_NL)
 summary(ur.df(CV_NL_diff1,lags=0))
 plot(ts(cbind(CV_NL,CV_NL_diff1),start=c(2005,2),frequency=4))
 
-summary(ur.df(CV_NL,lags=0))
 summary(ur.df(IPV_NL,lags=0))
 summary(ur.df(GDP_NL,lags=0))
 summary(ur.df(REM_NL,lags=0))
@@ -576,7 +575,6 @@ CV_OAXACA_diff1<-diff(CV_OAXACA)
 summary(ur.df(CV_OAXACA_diff1,lags=0))
 plot(ts(cbind(CV_OAXACA,CV_OAXACA_diff1),start=c(2005,2),frequency=4))
 
-summary(ur.df(CV_OAXACA,lags=0))
 summary(ur.df(IPV_OAXACA,lags=0))
 summary(ur.df(GDP_OAXACA,lags=0))
 summary(ur.df(REM_OAXACA,lags=0))
@@ -588,7 +586,6 @@ CV_PUE_diff1<-diff(CV_PUE)
 summary(ur.df(CV_PUE_diff1,lags=0))
 plot(ts(cbind(CV_PUE,CV_PUE_diff1),start=c(2005,2),frequency=4))
 
-summary(ur.df(CV_PUE,lags=0))
 summary(ur.df(IPV_PUE,lags=0))
 summary(ur.df(GDP_PUE,lags=0))
 summary(ur.df(REM_PUE,lags=0))
@@ -600,7 +597,6 @@ CV_QRO_diff1<-diff(CV_QRO)
 summary(ur.df(CV_QRO_diff1,lags=0))
 plot(ts(cbind(CV_QRO,CV_QRO_diff1),start=c(2005,2),frequency=4))
 
-summary(ur.df(CV_QRO,lags=0))
 summary(ur.df(IPV_QRO,lags=0))
 summary(ur.df(GDP_QRO,lags=0))
 summary(ur.df(REM_QRO,lags=0))
@@ -612,7 +608,6 @@ CV_Q_ROO_diff1<-diff(CV_Q_ROO)
 summary(ur.df(CV_Q_ROO_diff1,lags=0))
 plot(ts(cbind(CV_Q_ROO,CV_Q_ROO_diff1),start=c(2005,2),frequency=4))
 
-summary(ur.df(CV_Q_ROO,lags=0))
 summary(ur.df(IPV_Q_ROO,lags=0))
 summary(ur.df(GDP_Q_ROO,lags=0))
 summary(ur.df(REM_Q_ROO,lags=0))
@@ -624,10 +619,43 @@ CV_SIN_diff1<-diff(CV_SIN)
 summary(ur.df(CV_SIN_diff1,lags=0))
 plot(ts(cbind(CV_SIN,CV_SIN_diff1),start=c(2005,2),frequency=4))
 
-summary(ur.df(CV_SIN,lags=0))
 summary(ur.df(IPV_SIN,lags=0))
 summary(ur.df(GDP_SIN,lags=0))
 summary(ur.df(REM_SIN,lags=0))
 summary(ur.df(UNEMP_SIN,lags=0))
 summary(ur.df(DEBT_SIN,lags=0))
+```
+
+# TEST MODEL 1: NATIONAL DATA
+```{r}
+fit <- auto.arima(DATA.ts[,"CV"],
+                  xreg=DATA.ts[,c(2,7,8,10,11,12,13,14,15,16,17,18,19)])
+
+fit
+
+library('lmtest')
+coeftest(fit)
+
+(1-pnorm(abs(fit$coef)/sqrt(diag(fit$var.coef))))*2
+
+checkresiduals(fit)
+```
+
+# TEST MODEL 2: STATE LEVEL DATA
+```{r}
+# Sinaloa
+
+SINALOA <- cbind(CV_SIN_diff1,IPV_SIN,GDP_SIN,REM_SIN,UNEMP_SIN,DEBT_SIN)
+
+fit2 <- auto.arima(SINALOA[,"CV_SIN_diff1"],
+                   xreg=SINALOA[,2:6])
+
+fit2
+
+library('lmtest')
+coeftest(fit2)
+
+(1-pnorm(abs(fit2$coef)/sqrt(diag(fit2$var.coef))))*2
+
+checkresiduals(fit2)
 ```
