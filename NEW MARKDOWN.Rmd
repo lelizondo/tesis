@@ -1,0 +1,1328 @@
+---
+title: "Preprocessing Data"
+author:
+- Lourdes Sofía Elizondo Guajardo
+- Daniela Diaz Delgado
+- Bernardo Ortega Chávez
+- Gabriel González Bataller
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 4
+    number_sections: yes
+  html_document:
+    toc: yes
+    toc_depth: '4'
+    df_print: paged
+    always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("gmodels")
+library("ggplot2")
+library("pROC")
+library("rpart")
+library("rattle")
+library("rpart.plot")
+library("tinytex")
+library("kableExtra")
+library("ROSE")
+library("tibble")
+library("bitops")
+library("tidyquant")
+library("knitr")
+library("plotly")
+library("Sim.DiffProc")
+library("readxl")
+library("usethis")
+library("curl")
+library("dplyr")
+library("tidyr")
+library("scales")
+library("RColorBrewer")
+library("forcats")
+library("ggrepel")
+library("gridExtra")
+library('tseries')
+library("quantmod")
+library("urca")
+library("fpp2")
+library('feasts')
+library('features')
+library('fabletools')
+```
+
+# National Data Set
+
+## Loading and visualizing the data
+
+```{r}
+BDT2 <- read_excel("BDF NACIONAL.xlsx")
+DATA.ts <- ts(BDT2, start = c(2005, 2), frequency = 4)
+
+CV <- DATA.ts[ ,1]
+INPC_AB <- DATA.ts[ ,2]
+INPC_SERV <- DATA.ts[ ,3]
+INPC_T<- DATA.ts[ ,4]
+INPC_E <- DATA.ts[ ,5]
+IPV <- DATA.ts[ ,6]
+IPC_SUB <- DATA.ts[ ,7]
+REMESAS <- DATA.ts[ ,8]
+INT <- DATA.ts[ ,9]
+CONF <- DATA.ts[ ,10]
+M1 <- DATA.ts[ ,11]
+DEBT <- DATA.ts[ ,12]
+EX <- DATA.ts[ ,13]
+PIB <- DATA.ts[,14]
+DESEMPLEO <- DATA.ts[,15]
+IGAE <- DATA.ts[,16]
+
+head(DATA.ts)
+
+# PLOTS
+INPC_to_IPC_SUB <- ts(cbind(CV,INPC_AB,INPC_SERV,INPC_T,INPC_E,IPC_SUB),start=c(2005,2),frequency=4)
+IPV_to_EX <- ts(cbind(CV, IPV, REMESAS, INT, CONF, M1, DEBT, EX),start=c(2005,2),frequency=4)
+DESEMPLEO_PIB_IGAE <- ts(cbind(CV, DESEMPLEO, PIB, IGAE),start=c(2005,2),frequency=4)
+plot(INPC_to_IPC_SUB, cex.lab=0.7)
+plot(IPV_to_EX, cex.lab=0.7)
+plot(DESEMPLEO_PIB_IGAE, cex.lab=0.7)
+```
+
+## Correlation
+
+```{r}
+# Matrix
+round(cor(DATA.ts), 2)
+```
+
+We filtered the coefficients to only get those greater than 0.5:
+
+```{r}
+# Filtered data
+cor_mat <- cor(DATA.ts)
+cor_mat[!lower.tri(cor_mat)] <- NA # remove diagonal and redundant values
+data.frame( cor_mat) %>%
+              rownames_to_column() %>%
+              gather(key="variable", value="correlation", -rowname) %>%
+              filter(abs(correlation) > 0.5)
+```
+We will have to choose the variables that minimize the AIC further on.
+
+## Stationarity
+
+With a standard dickey fuller test we checked for stationary and for all cases the test-statistic is smaller than the critical value at a 99% confidence level. This means that all variables are stationary. This was expected given that all variables are variations and given the time series graphs analyzed before.
+
+```{r}
+CV.DF=ur.df(CV, type="trend",lags=0)
+summary(CV.DF)
+
+INPC_AB.DF=ur.df(INPC_AB, type = "trend", lags = 0)
+summary(INPC_AB.DF)
+
+INPC_SERV.DF=ur.df(INPC_SERV, type = "trend", lags = 0)
+summary(INPC_SERV.DF)
+
+INPC_T.DF=ur.df(INPC_T, type = "trend", lags = 0)
+summary(INPC_T.DF)
+
+INPC_E.DF=ur.df(INPC_E, type = "trend", lags = 0)
+summary(INPC_E.DF)
+
+IPV.DF=ur.df(IPV, type = "trend", lags = 0)
+summary(IPV.DF)
+
+IPC_SUB.DF=ur.df(IPC_SUB, type = "trend", lags = 0)
+summary(IPC_SUB.DF)
+
+REMESAS.DF=ur.df(REMESAS, type = "trend", lags = 0)
+summary(REMESAS.DF)
+
+INT.DF=ur.df(INT, type = "trend", lags = 0)
+summary(INT.DF)
+
+CONF.DF=ur.df(CONF, type = "trend", lags = 0)
+summary(CONF.DF)
+
+M1.DF=ur.df(M1, type = "trend", lags = 0)
+summary(M1.DF)
+
+DEBT.DF=ur.df(DEBT, type = "trend", lags = 0)
+summary(DEBT.DF)
+
+EX.DF=ur.df(EX, type = "trend", lags = 0)
+summary(EX.DF)
+
+PIB.DF=ur.df(PIB, type="trend",lags=0)
+summary(PIB.DF)
+
+DESEMPLEO.DF=ur.df(DESEMPLEO, type = "trend", lags = 0)
+summary(DESEMPLEO.DF)
+
+IGAE.DF=ur.df(IGAE, type = "trend", lags = 0)
+summary(IGAE.DF)
+```
+
+# Estimating lags 
+
+Given that each variable may have a different lagged effect on the default rate (CV) we perform individual ARIMAs of each stationary variable with CV with different *lags*, to determine which amount of lags gives us the minimum AIC. We do not, however, compute an ARIMA with zero lags, because one would not have the necessary inputs to run the ARIMA and forecast. Thus the comparison below is between: AIC with 1 lags, with 2 lags and with 3 lags.
+
+We  chose the right amount of lags for each case, minimizing AIC.
+
+```{r}
+# INPC_AB
+INPC_AB_v<-as.vector(INPC_AB)
+CV_v<-as.vector(CV)
+INPC_AB_v2<-cbind(INPC_AB_v,CV_v)
+colnames(INPC_AB_v2)<-c("INPC_AB","CV")
+a<- lag(INPC_AB_v,0)
+x<- lag(INPC_AB_v,1)
+y<- lag(INPC_AB_v,2)
+z<- lag(INPC_AB_v,3)
+INPC_AB_lags <- cbind(x,y,z)
+
+fitINPC_AB1 <- auto.arima(INPC_AB_v2[4: 63,2], xreg=INPC_AB_lags[4: 63,1], d=0)
+fitINPC_AB2 <- auto.arima(INPC_AB_v2[4: 63,2], xreg=INPC_AB_lags[4: 63,1:2], d=0)
+fitINPC_AB3 <- auto.arima(INPC_AB_v2[4: 63,2], xreg=INPC_AB_lags[4: 63,1:3], d=0)
+AIC_INPC_AB <- cbind(fitINPC_AB1$aic,fitINPC_AB2$aic,fitINPC_AB3$aic)
+colnames(AIC_INPC_AB)<-c("1 lag","2 lags", "3 lags")
+
+# INPC_SERV
+INPC_SERV_v<-as.vector(INPC_SERV)
+CV_v<-as.vector(CV)
+INPC_SERV_v2<-cbind(INPC_SERV_v,CV_v)
+colnames(INPC_SERV_v2)<-c("INPC_SERV","CV")
+a<- lag(INPC_SERV_v,0)
+x<- lag(INPC_SERV_v,1)
+y<- lag(INPC_SERV_v,2)
+z<- lag(INPC_SERV_v,3)
+INPC_SERV_lags <- cbind(x,y,z)
+fitINPC_SERV1 <- auto.arima(INPC_SERV_v2[4: 63,2], xreg=INPC_SERV_lags[4: 63,1], d=0)
+fitINPC_SERV2 <- auto.arima(INPC_SERV_v2[4: 63,2], xreg=INPC_SERV_lags[4: 63,1:2], d=0)
+fitINPC_SERV3 <- auto.arima(INPC_SERV_v2[4: 63,2], xreg=INPC_SERV_lags[4: 63,1:3], d=0)
+AIC_INPC_SERV <- cbind(fitINPC_SERV1$aic,fitINPC_SERV2$aic,fitINPC_SERV3$aic)
+colnames(AIC_INPC_SERV)<-c("1 lag","2 lags", "3 lags")
+
+# INPC_T
+INPC_T_v<-as.vector(INPC_T)
+CV_v<-as.vector(CV)
+INPC_T_v2<-cbind(INPC_T_v,CV_v)
+colnames(INPC_T_v2)<-c("INPC_T","CV")
+a<- lag(INPC_T_v,0)
+x<- lag(INPC_T_v,1)
+y<- lag(INPC_T_v,2)
+z<- lag(INPC_T_v,3)
+INPC_T_lags <- cbind(x,y,z)
+fitINPC_T1 <- auto.arima(INPC_T_v2[4: 63,2], xreg=INPC_T_lags[4: 63,1], d=0)
+fitINPC_T2 <- auto.arima(INPC_T_v2[4: 63,2], xreg=INPC_T_lags[4: 63,1:2], d=0)
+fitINPC_T3 <- auto.arima(INPC_T_v2[4: 63,2], xreg=INPC_T_lags[4: 63,1:3], d=0)
+AIC_INPC_T <- cbind(fitINPC_T1$aic,fitINPC_T2$aic,fitINPC_T3$aic)
+colnames(AIC_INPC_T)<-c("1 lag","2 lags", "3 lags")
+
+# INPC_E
+INPC_E_v<-as.vector(INPC_E)
+CV_v<-as.vector(CV)
+INPC_E_v2<-cbind(INPC_E_v,CV_v)
+colnames(INPC_E_v2)<-c("INPC_E","CV")
+a<- lag(INPC_E_v,0)
+x<- lag(INPC_E_v,1)
+y<- lag(INPC_E_v,2)
+z<- lag(INPC_E_v,3)
+INPC_E_lags <- cbind(x,y,z)
+fitINPC_E1 <- auto.arima(INPC_E_v2[4: 63,2], xreg=INPC_E_lags[4: 63,1], d=0)
+fitINPC_E2 <- auto.arima(INPC_E_v2[4: 63,2], xreg=INPC_E_lags[4: 63,1:2], d=0)
+fitINPC_E3 <- auto.arima(INPC_E_v2[4: 63,2], xreg=INPC_E_lags[4: 63,1:3], d=0)
+AIC_INPC_E <- cbind(fitINPC_E1$aic,fitINPC_E2$aic,fitINPC_E3$aic)
+colnames(AIC_INPC_E)<-c("1 lag","2 lags", "3 lags")
+
+# IPV
+IPV_v<-as.vector(IPV)
+CV_v<-as.vector(CV)
+IPV_v2<-cbind(IPV_v,CV_v)
+colnames(IPV_v2)<-c("IPV","CV")
+a<- lag(IPV_v,0)
+x<- lag(IPV_v,1)
+y<- lag(IPV_v,2)
+z<- lag(IPV_v,3)
+IPV_lags <- cbind(x,y,z)
+fitIPV1 <- auto.arima(IPV_v2[4: 63,2], xreg=IPV_lags[4: 63,1], d=0)
+fitIPV2 <- auto.arima(IPV_v2[4: 63,2], xreg=IPV_lags[4: 63,1:2], d=0)
+fitIPV3 <- auto.arima(IPV_v2[4: 63,2], xreg=IPV_lags[4: 63,1:3], d=0)
+AIC_IPV <- cbind(fitIPV1$aic,fitIPV2$aic,fitIPV3$aic)
+colnames(AIC_IPV)<-c("1 lag","2 lags", "3 lags")
+
+# IPC_SUB
+IPC_SUB_v<-as.vector(IPC_SUB)
+CV_v<-as.vector(CV)
+IPC_SUB_v2<-cbind(IPC_SUB_v,CV_v)
+colnames(IPC_SUB_v2)<-c("IPC_SUB","CV")
+a<- lag(IPC_SUB_v,0)
+x<- lag(IPC_SUB_v,1)
+y<- lag(IPC_SUB_v,2)
+z<- lag(IPC_SUB_v,3)
+IPC_SUB_lags <- cbind(x,y,z)
+fitIPC_SUB1 <- auto.arima(IPC_SUB_v2[4: 63,2], xreg=IPC_SUB_lags[4: 63,1], d=0)
+fitIPC_SUB2 <- auto.arima(IPC_SUB_v2[4: 63,2], xreg=IPC_SUB_lags[4: 63,1:2], d=0)
+fitIPC_SUB3 <- auto.arima(IPC_SUB_v2[4: 63,2], xreg=IPC_SUB_lags[4: 63,1:3], d=0)
+AIC_IPC_SUB <- cbind(fitIPC_SUB1$aic,fitIPC_SUB2$aic,fitIPC_SUB3$aic)
+colnames(AIC_IPC_SUB)<-c("1 lag","2 lags", "3 lags")
+
+# REMESAS
+REMESAS_v<-as.vector(REMESAS)
+CV_v<-as.vector(CV)
+REMESAS_v2<-cbind(REMESAS_v,CV_v)
+colnames(REMESAS_v2)<-c("REMESAS","CV")
+a<- lag(REMESAS_v,0)
+x<- lag(REMESAS_v,1)
+y<- lag(REMESAS_v,2)
+z<- lag(REMESAS_v,3)
+REMESAS_lags <- cbind(x,y,z)
+fitREMESAS1 <- auto.arima(REMESAS_v2[4: 63,2], xreg=REMESAS_lags[4: 63,1], d=0)
+fitREMESAS2 <- auto.arima(REMESAS_v2[4: 63,2], xreg=REMESAS_lags[4: 63,1:2], d=0)
+fitREMESAS3 <- auto.arima(REMESAS_v2[4: 63,2], xreg=REMESAS_lags[4: 63,1:3], d=0)
+AIC_REMESAS <- cbind(fitREMESAS1$aic,fitREMESAS2$aic,fitREMESAS3$aic)
+colnames(AIC_REMESAS)<-c("1 lag","2 lags", "3 lags")
+
+# INT
+INT_v<-as.vector(INT)
+CV_v<-as.vector(CV)
+INT_v2<-cbind(INT_v,CV_v)
+colnames(INT_v2)<-c("INT","CV")
+a<- lag(INT_v,0)
+x<- lag(INT_v,1)
+y<- lag(INT_v,2)
+z<- lag(INT_v,3)
+INT_lags <- cbind(x,y,z)
+fitINT1 <- auto.arima(INT_v2[4: 63,2], xreg=INT_lags[4: 63,1], d=0)
+fitINT2 <- auto.arima(INT_v2[4: 63,2], xreg=INT_lags[4: 63,1:2], d=0)
+fitINT3 <- auto.arima(INT_v2[4: 63,2], xreg=INT_lags[4: 63,1:3], d=0)
+AIC_INT <- cbind(fitINT1$aic,fitINT2$aic,fitINT3$aic)
+colnames(AIC_INT)<-c("1 lag","2 lags", "3 lags")
+
+# CONF
+CONF_v<-as.vector(CONF)
+CV_v<-as.vector(CV)
+CONF_v2<-cbind(CONF_v,CV_v)
+colnames(CONF_v2)<-c("CONF","CV")
+a<- lag(CONF_v,0)
+x<- lag(CONF_v,1)
+y<- lag(CONF_v,2)
+z<- lag(CONF_v,3)
+CONF_lags <- cbind(x,y,z)
+fitCONF1 <- auto.arima(CONF_v2[4: 63,2], xreg=CONF_lags[4: 63,1], d=0)
+fitCONF2 <- auto.arima(CONF_v2[4: 63,2], xreg=CONF_lags[4: 63,1:2], d=0)
+fitCONF3 <- auto.arima(CONF_v2[4: 63,2], xreg=CONF_lags[4: 63,1:3], d=0)
+AIC_CONF <- cbind(fitCONF1$aic,fitCONF2$aic,fitCONF3$aic)
+colnames(AIC_CONF)<-c("1 lag","2 lags", "3 lags")
+
+# M1
+M1_v<-as.vector(M1)
+CV_v<-as.vector(CV)
+M1_v2<-cbind(M1_v,CV_v)
+colnames(M1_v2)<-c("M1","CV")
+a<- lag(M1_v,0)
+x<- lag(M1_v,1)
+y<- lag(M1_v,2)
+z<- lag(M1_v,3)
+M1_lags <- cbind(x,y,z)
+fitM11 <- auto.arima(M1_v2[4: 63,2], xreg=M1_lags[4: 63,1], d=0)
+fitM12 <- auto.arima(M1_v2[4: 63,2], xreg=M1_lags[4: 63,1:2], d=0)
+fitM13 <- auto.arima(M1_v2[4: 63,2], xreg=M1_lags[4: 63,1:3], d=0)
+AIC_M1 <- cbind(fitM11$aic,fitM12$aic,fitM13$aic)
+colnames(AIC_M1)<-c("1 lag","2 lags", "3 lags")
+
+# DEBT
+DEBT_v<-as.vector(DEBT)
+CV_v<-as.vector(CV)
+DEBT_v2<-cbind(DEBT_v,CV_v)
+colnames(DEBT_v2)<-c("DEBT","CV")
+a<- lag(DEBT_v,0)
+x<- lag(DEBT_v,1)
+y<- lag(DEBT_v,2)
+z<- lag(DEBT_v,3)
+DEBT_lags <- cbind(x,y,z)
+fitDEBT1 <- auto.arima(DEBT_v2[4: 63,2], xreg=DEBT_lags[4: 63,1], d=0)
+fitDEBT2 <- auto.arima(DEBT_v2[4: 63,2], xreg=DEBT_lags[4: 63,1:2], d=0)
+fitDEBT3 <- auto.arima(DEBT_v2[4: 63,2], xreg=DEBT_lags[4: 63,1:3], d=0)
+AIC_DEBT <- cbind(fitDEBT1$aic,fitDEBT2$aic,fitDEBT3$aic)
+colnames(AIC_DEBT)<-c("1 lag","2 lags", "3 lags")
+
+# EX
+EX_v<-as.vector(EX)
+CV_v<-as.vector(CV)
+EX_v2<-cbind(EX_v,CV_v)
+colnames(EX_v2)<-c("EX","CV")
+a<- lag(EX_v,0)
+x<- lag(EX_v,1)
+y<- lag(EX_v,2)
+z<- lag(EX_v,3)
+EX_lags <- cbind(x,y,z)
+fitEX1 <- auto.arima(EX_v2[4: 63,2], xreg=EX_lags[4: 63,1], d=0)
+fitEX2 <- auto.arima(EX_v2[4: 63,2], xreg=EX_lags[4: 63,1:2], d=0)
+fitEX3 <- auto.arima(EX_v2[4: 63,2], xreg=EX_lags[4: 63,1:3], d=0)
+AIC_EX <- cbind(fitEX1$aic,fitEX2$aic,fitEX3$aic)
+colnames(AIC_EX)<-c("1 lag","2 lags", "3 lags")
+
+# PIB
+PIB_v<-as.vector(PIB)
+CV_v<-as.vector(CV)
+PIB_v2<-cbind(PIB_v,CV_v)
+colnames(PIB_v2)<-c("PIB","CV")
+a<- lag(PIB_v,0)
+x<- lag(PIB_v,1)
+y<- lag(PIB_v,2)
+z<- lag(PIB_v,3)
+PIB_lags <- cbind(x,y,z)
+fitPIB1 <- auto.arima(PIB_v2[4: 63,2], xreg=PIB_lags[4: 63,1], d=0)
+fitPIB2 <- auto.arima(PIB_v2[4: 63,2], xreg=PIB_lags[4: 63,1:2], d=0)
+fitPIB3 <- auto.arima(PIB_v2[4: 63,2], xreg=PIB_lags[4: 63,1:3], d=0)
+AIC_PIB <- cbind(fitPIB1$aic,fitPIB2$aic,fitPIB3$aic)
+colnames(AIC_PIB)<-c("1 lag","2 lags", "3 lags")
+
+# DESEMPLEO
+DESEMPLEO_v<-as.vector(DESEMPLEO)
+CV_v<-as.vector(CV)
+DESEMPLEO_v2<-cbind(DESEMPLEO_v,CV_v)
+colnames(DESEMPLEO_v2)<-c("DESEMPLEO","CV")
+a<- lag(DESEMPLEO_v,0)
+x<- lag(DESEMPLEO_v,1)
+y<- lag(DESEMPLEO_v,2)
+z<- lag(DESEMPLEO_v,3)
+DESEMPLEO_lags <- cbind(x,y,z)
+fitDESEMPLEO1 <- auto.arima(DESEMPLEO_v2[4: 63,2], xreg=DESEMPLEO_lags[4: 63,1], d=0)
+fitDESEMPLEO2 <- auto.arima(DESEMPLEO_v2[4: 63,2], xreg=DESEMPLEO_lags[4: 63,1:2], d=0)
+fitDESEMPLEO3 <- auto.arima(DESEMPLEO_v2[4: 63,2], xreg=DESEMPLEO_lags[4: 63,1:3], d=0)
+AIC_DESEMPLEO <- cbind(fitDESEMPLEO1$aic,fitDESEMPLEO2$aic,fitDESEMPLEO3$aic)
+colnames(AIC_DESEMPLEO)<-c("1 lag","2 lags", "3 lags")
+
+# IGAE
+IGAE_v<-as.vector(IGAE)
+CV_v<-as.vector(CV)
+IGAE_v2<-cbind(IGAE_v,CV_v)
+colnames(IGAE_v2)<-c("IGAE","CV")
+a<- lag(IGAE_v,0)
+x<- lag(IGAE_v,1)
+y<- lag(IGAE_v,2)
+z<- lag(IGAE_v,3)
+IGAE_lags <- cbind(x,y,z)
+fitIGAE1 <- auto.arima(IGAE_v2[4: 63,2], xreg=IGAE_lags[4: 63,1], d=0)
+fitIGAE2 <- auto.arima(IGAE_v2[4: 63,2], xreg=IGAE_lags[4: 63,1:2], d=0)
+fitIGAE3 <- auto.arima(IGAE_v2[4: 63,2], xreg=IGAE_lags[4: 63,1:3], d=0)
+AIC_IGAE <- cbind(fitIGAE1$aic,fitIGAE2$aic,fitIGAE3$aic)
+colnames(AIC_IGAE)<-c("1 lag","2 lags", "3 lags")
+```
+
+```{r}
+AICs<-rbind(AIC_INPC_AB, AIC_INPC_SERV, AIC_INPC_T, AIC_INPC_E, AIC_IPV, AIC_IPC_SUB, AIC_REMESAS, AIC_INT, AIC_CONF, AIC_M1, AIC_DEBT, AIC_EX, AIC_PIB, AIC_DESEMPLEO, AIC_IGAE)
+rownames(AICs)<-c("INPC_AB", "INPC_SERV", "INPC_T", "INPC_E", "IPV", "IPC_SUB", "REMESAS", "INT", "CONF", "M1", "DEBT", "EX", "PIB", "DESEMPLEO", "IGAE")
+AICs
+```
+
+Analyzing the results above, we created a new excel file (called BDF2) where for each variable we included:
+
+1. The variable with 1 lag
+2. The subsequent lagged variables until the minimum AIC is reached
+
+For example, for INPC_AB, the number of lags that minimizes AIC is three. In this case, we include INPC_AB (1 lag), INPC_AB_2 (2 lags) and INPC_AB_3 (3 lags). Like so:
+
+```{r}
+BDF2 <- read_excel("BDF NACIONAL LAGS.xlsx")
+BDF2 <- ts(BDF2, start = c(2006,1),frequency = 4)
+head(BDF2)
+```
+
+# Models & hypothesis
+
+Now, with all variables stationary and with the right amount of lags, we test *different combinations of variables*, to remove those that do not contribute to the minimization of AIC. (Note that the significance of the coefficients is not very relevant for the forecast model and for the scope of this investigation)
+
+We did this in accordance to the next hypothesis and in line with what literature in similar studies has done:
+
+## Hypothesis
+
+### Borrower's ability to pay
+
+(explain) 
+
+### Willingness of consumers to pay their mortgage
+
+(explain) 
+
+### Confidence and cost indicators for home purchase
+
+(explain)
+
+```{r}
+training_set<-ts(BDF2[1:59,],start = c(2006,1),frequency=4)
+```
+
+## Testing models
+
+**H1**
+23:24 PIB
+26: IGAE
+
+**H2**
+2:7 INPC_AB a T 
+8: INPC_E
+10:12 IPC_SUB
+
+**CONSTANT**
+13:15 REMESAS
+9: IPV
+25: DESEMPLEO
+
+**VARIABLE**
+18:20 M1
+17: CONF
+27: EX
+21:22 DEBT
+16: INT
+
+Model 1: 25,13:15,9, 23:24,  2:7      + variable
+Model 2: 25,13:15,9, 23:24,  8,10:12  + variable
+Model 3: 25,13:15,9, 26,     2:7      + variable
+Model 4: 25,13:15,9, 26,     8,10:12  + variable
+
+```{r}
+# Modelo 1
+modelo_1.1 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 17, 27, 21:22, 16)])
+modelo_1.2 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 17, 27, 21:22)])
+modelo_1.3 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 17, 27, 16)])
+modelo_1.4 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 17, 27)])
+modelo_1.5 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 17, 21:22, 16)])
+modelo_1.6 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 17, 21:22)])
+modelo_1.7 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 17, 16)])
+modelo_1.8 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 17)])
+modelo_1.9 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 27, 21:22, 16)])
+modelo_1.10 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 27, 21:22)])
+modelo_1.11 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 27, 16)])
+modelo_1.12 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 27)])
+modelo_1.13 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 21:22, 16)])
+modelo_1.14 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 21:22)])
+modelo_1.15 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20, 16)])
+modelo_1.16 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 18:20)])
+modelo_1.17 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 17, 27, 21:22, 16)])
+modelo_1.18 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 17, 27, 21:22)])
+modelo_1.19 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 17, 27, 16)])
+modelo_1.20 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 17, 27)])
+modelo_1.21 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 17, 21:22, 16)])
+modelo_1.22 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 17, 21:22)])
+modelo_1.23 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 17, 16)])
+modelo_1.24 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 17)])
+modelo_1.25 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 27, 21:22, 16)])
+modelo_1.26 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 27, 21:22)])
+modelo_1.27 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 27, 16)])
+modelo_1.28 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 27)])
+modelo_1.29 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 21:22, 16)])
+modelo_1.30 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 21:22)])
+modelo_1.31 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7, 16)])
+modelo_1.32 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  2:7)])
+```
+
+```{r}
+# Modelo 2
+modelo_2.1 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17, 27, 21:22, 16)])
+modelo_2.2 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17, 27, 21:22)])
+modelo_2.3 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17, 27, 16)])
+modelo_2.4 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17, 27)])
+modelo_2.5 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17, 21:22, 16)])
+modelo_2.6 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17, 21:22)])
+modelo_2.7 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17, 16)])
+modelo_2.8 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17)])
+modelo_2.9 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 27, 21:22, 16)])
+modelo_2.10 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 27, 21:22)])
+modelo_2.11 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 27, 16)])
+modelo_2.12 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 27)])
+modelo_2.13 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 21:22, 16)])
+modelo_2.14 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 21:22)])
+modelo_2.15 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 16)])
+modelo_2.16 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 18:20)])
+modelo_2.17 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 17, 27, 21:22, 16)])
+modelo_2.18 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 17, 27, 21:22)])
+modelo_2.19 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 17, 27, 16)])
+modelo_2.20 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 17, 27)])
+modelo_2.21 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 17, 21:22, 16)])
+modelo_2.22 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 17, 21:22)])
+modelo_2.23 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 17, 16)])
+modelo_2.24 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 17)])
+modelo_2.25 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 27, 21:22, 16)])
+modelo_2.26 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 27, 21:22)])
+modelo_2.27 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 27, 16)])
+modelo_2.28 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 27)])
+modelo_2.29 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 21:22, 16)])
+modelo_2.30 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 21:22)])
+modelo_2.31 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12, 16)])
+modelo_2.32 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 23:24,  8, 10:12)])
+```
+
+```{r}
+# Modelo 3
+modelo_3.1 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 17, 27, 21:22, 16)])
+modelo_3.2 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 17, 27, 21:22)])
+modelo_3.3 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 17, 27, 16)])
+modelo_3.4 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 17, 27)])
+modelo_3.5 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 17, 21:22, 16)])
+modelo_3.6 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 17, 21:22)])
+modelo_3.7 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 17, 16)])
+modelo_3.8 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 17)])
+modelo_3.9 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 27, 21:22, 16)])
+modelo_3.10 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 27, 21:22)])
+modelo_3.11 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 27, 16)])
+modelo_3.12 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 27)])
+modelo_3.13 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 21:22, 16)])
+modelo_3.14 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 21:22)])
+modelo_3.15 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20, 16)])
+modelo_3.16 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 18:20)])
+modelo_3.17 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 17, 27, 21:22, 16)])
+modelo_3.18 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 17, 27, 21:22)])
+modelo_3.19 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 17, 27, 16)])
+modelo_3.20 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 17, 27)])
+modelo_3.21 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 17, 21:22, 16)])
+modelo_3.22 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 17, 21:22)])
+modelo_3.23 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 17, 16)])
+modelo_3.24 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 17)])
+modelo_3.25 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 27, 21:22, 16)])
+modelo_3.26 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 27, 21:22)])
+modelo_3.27 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 27, 16)])
+modelo_3.28 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 27)])
+modelo_3.29 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 21:22, 16)])
+modelo_3.30 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 21:22)])
+modelo_3.31 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7, 16)])
+modelo_3.32 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  2:7)])
+```
+
+```{r}
+# Modelo 4
+modelo_4.1 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 17, 27, 21:22, 16)])
+modelo_4.2 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 17, 27, 21:22)])
+modelo_4.3 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 17, 27, 16)])
+modelo_4.4 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 17, 27)])
+modelo_4.5 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 17, 21:22, 16)])
+modelo_4.6 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 17, 21:22)])
+modelo_4.7 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 17, 16)])
+modelo_4.8 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 17)])
+modelo_4.9 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 27, 21:22, 16)])
+modelo_4.10 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 27, 21:22)])
+modelo_4.11 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 27, 16)])
+modelo_4.12 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 27)])
+modelo_4.13 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 21:22, 16)])
+modelo_4.14 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 21:22)])
+modelo_4.15 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20, 16)])
+modelo_4.16 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 18:20)])
+modelo_4.17 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 17, 27, 21:22, 16)])
+modelo_4.18 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 17, 27, 21:22)])
+modelo_4.19 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 17, 27, 16)])
+modelo_4.20 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 17, 27)])
+modelo_4.21 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 17, 21:22, 16)])
+modelo_4.22 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 17, 21:22)])
+modelo_4.23 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 17, 16)])
+modelo_4.24 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 17)])
+modelo_4.25 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 27, 21:22, 16)])
+modelo_4.26 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 27, 21:22)])
+modelo_4.27 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 27, 16)])
+modelo_4.28 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 27)])
+modelo_4.29 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 21:22, 16)])
+modelo_4.30 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 21:22)])
+modelo_4.31 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12, 16)])
+modelo_4.32 <- auto.arima(training_set[,"CV"],
+                         xreg=training_set[,c(25,13:15,9, 26,  8, 10:12)])
+```
+
+```{r}
+#AIC comparison
+AICs_modelo1<-rbind(modelo_1.1$aic,modelo_1.2$aic,modelo_1.3$aic,modelo_1.4$aic,modelo_1.5$aic,modelo_1.6$aic,modelo_1.7$aic,modelo_1.8$aic,modelo_1.9$aic,modelo_1.10$aic,modelo_1.11$aic,modelo_1.12$aic,modelo_1.13$aic,modelo_1.14$aic,modelo_1.15$aic,modelo_1.16$aic,modelo_1.17$aic,modelo_1.18$aic,modelo_1.19$aic,modelo_1.20$aic,modelo_1.21$aic,modelo_1.22$aic,modelo_1.23$aic,modelo_1.24$aic,modelo_1.25$aic,modelo_1.26$aic,modelo_1.27$aic,modelo_1.28$aic,modelo_1.29$aic,modelo_1.30$aic,modelo_1.31$aic,modelo_1.32$aic)
+
+AICs_modelo2<-rbind(modelo_2.1$aic,modelo_2.2$aic,modelo_2.3$aic,modelo_2.4$aic,modelo_2.5$aic,modelo_2.6$aic,modelo_2.7$aic,modelo_2.8$aic,modelo_2.9$aic,modelo_2.10$aic,modelo_2.11$aic,modelo_2.12$aic,modelo_2.13$aic,modelo_2.14$aic,modelo_2.15$aic,modelo_2.16$aic,modelo_2.17$aic,modelo_2.18$aic,modelo_2.19$aic,modelo_2.20$aic,modelo_2.21$aic,modelo_2.22$aic,modelo_2.23$aic,modelo_2.24$aic,modelo_2.25$aic,modelo_2.26$aic,modelo_2.27$aic,modelo_2.28$aic,modelo_2.29$aic,modelo_2.30$aic,modelo_2.31$aic,modelo_2.32$aic)
+
+AICs_modelo3<-rbind(modelo_3.1$aic,modelo_3.2$aic,modelo_3.3$aic,modelo_3.4$aic,modelo_3.5$aic,modelo_3.6$aic,modelo_3.7$aic,modelo_3.8$aic,modelo_3.9$aic,modelo_3.10$aic,modelo_3.11$aic,modelo_3.12$aic,modelo_3.13$aic,modelo_3.14$aic,modelo_3.15$aic,modelo_3.16$aic,modelo_3.17$aic,modelo_3.18$aic,modelo_3.19$aic,modelo_3.20$aic,modelo_3.21$aic,modelo_3.22$aic,modelo_3.23$aic,modelo_3.24$aic,modelo_3.25$aic,modelo_3.26$aic,modelo_3.27$aic,modelo_3.28$aic,modelo_3.29$aic,modelo_3.30$aic,modelo_3.31$aic,modelo_3.32$aic)
+
+AICs_modelo4<-rbind(modelo_4.1$aic,modelo_4.2$aic,modelo_4.3$aic,modelo_4.4$aic,modelo_4.5$aic,modelo_4.6$aic,modelo_4.7$aic,modelo_4.8$aic,modelo_4.9$aic,modelo_4.10$aic,modelo_4.11$aic,modelo_4.12$aic,modelo_4.13$aic,modelo_4.14$aic,modelo_4.15$aic,modelo_4.16$aic,modelo_4.17$aic,modelo_4.18$aic,modelo_4.19$aic,modelo_4.20$aic,modelo_4.21$aic,modelo_4.22$aic,modelo_4.23$aic,modelo_4.24$aic,modelo_4.25$aic,modelo_4.26$aic,modelo_4.27$aic,modelo_4.28$aic,modelo_4.29$aic,modelo_4.30$aic,modelo_4.31$aic,modelo_4.32$aic)
+
+AICs_modelos<-cbind(AICs_modelo1,AICs_modelo2,AICs_modelo3,AICs_modelo4)
+colnames(AICs_modelos)<-c("Modelo 1","Modelo 2", "Modelo 3", "Modelo 4")
+rownames(AICs_modelos)<-c(1:32)
+
+AICs_modelos
+```
+
+## Best model
+
+```{r}
+min(AICs_modelos)
+```
+
+The model with the lowest AIC is **model_2.8** with AIC = -64.52464. This model includes:
+
+1. Borrower's ability to pay: (A) PIB instead of IGAE and (B) Unemployment and Remittances.
+2. Willingness of consumers to pay their mortgage: (A) INPC_E and IPC_SUB instead of the disaggregated INPC and (B) M1.
+3. Confidence and cost indicators for home purchase: IPV and consumer's confidence (CONF).
+
+At the end, the best model includes: PIB, DESEMPLEO, REMESAS, INPC_E, IPC_SUB, M1, IPV and CONF. **A total of 8 regressors.** M1 ended up in our final model; **that alone is a relevant finding**.
+
+The selected model is an ARIMA(2,0,3):
+
+```{r}
+summary(modelo_2.8)
+
+plot(modelo_2.8$x,col="blue")
+lines(fitted(modelo_2.8),col="red")
+```
+
+Forecast for last 2 quarters:
+
+```{r}
+test_set1<-as.matrix(BDF2[60:61,c(25,13:15,9, 23:24,  8, 10:12, 18:20, 17)])
+test_set<-t(test_set1)
+
+library("forecast")
+forecast_cv<-forecast(modelo_2.8,xreg=test_set1)
+autoplot(forecast_cv)
+```
+
+```{r}
+forecast_cv
+```
+```{r}
+forecast_2<-c("3.478257","3.524858")
+comparison<-as.data.frame(cbind(tail(DATA.ts[63:64,"CV"]),forecast_2))
+colnames(comparison)<-c("Actual CV","Forecasted CV")
+rownames(comparison)<-c("2020 Q4","2021 Q1")
+comparison
+```
+## Data Analysis
+
+```{r}
+# (por poner, HTML format)
+```
+
+# State Data Set
+
+Now we intend to follow a very similar methodology for the state level data.
+
+## Loading and visualizing the data: 32 states
+
+```{r}
+AGS<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 1)), start=c(2005,2), end=c(2020,4),  frequency=4)
+BC<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 2)), start=c(2005,2), end=c(2020,4),   frequency=4)
+BCS<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 3)), start=c(2005,2), end=c(2020,4),   frequency=4)
+CAMP<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 4)), start=c(2005,2), end=c(2020,4),   frequency=4)
+CDMX<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 5)), start=c(2005,2), end=c(2020,4),   frequency=4)
+CHIH<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 6)), start=c(2005,2), end=c(2020,4),   frequency=4)
+CHIS<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 7)), start=c(2005,2), end=c(2020,4),   frequency=4)
+COAH<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 8)), start=c(2005,2), end=c(2020,4),   frequency=4)
+COL<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 9)), start=c(2005,2), end=c(2020,4),   frequency=4)
+DGO<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 10)), start=c(2005,2), end=c(2020,4),   frequency=4)
+GRO<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 11)), start=c(2005,2), end=c(2020,4),   frequency=4)
+GTO<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 12)), start=c(2005,2), end=c(2020,4),   frequency=4)
+HGO<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 13)), start=c(2005,2), end=c(2020,4),   frequency=4)
+JAL<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 14)), start=c(2005,2), end=c(2020,4),   frequency=4)
+MEX<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 15)), start=c(2005,2), end=c(2020,4),   frequency=4)
+MICH<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 16)), start=c(2005,2), end=c(2020,4),   frequency=4)
+MOR<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 17)), start=c(2005,2), end=c(2020,4),   frequency=4)
+NAY<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 18)), start=c(2005,2), end=c(2020,4),   frequency=4)
+NL<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 19)), start=c(2005,2),  end=c(2020,4),  frequency=4)
+OAXACA<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 20)), start=c(2005,2), end=c(2020,4),   frequency=4)
+PUE<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 21)), start=c(2005,2), end=c(2020,4),   frequency=4)
+Q_ROO<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 22)), start=c(2005,2), end=c(2020,4),   frequency=4)
+QRO<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 23)), start=c(2005,2), end=c(2020,4),   frequency=4)
+SIN<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 24)), start=c(2005,2), end=c(2020,4),   frequency=4)
+SLP<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 25)), start=c(2005,2), end=c(2020,4),   frequency=4)
+SON<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 26)), start=c(2005,2), end=c(2020,4),   frequency=4)
+TAB<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 27)), start=c(2005,2), end=c(2020,4),   frequency=4)
+TAMPS<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 28)), start=c(2005,2), end=c(2020,4),    frequency=4)
+TLAX<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 29)), start=c(2005,2), end=c(2020,4),   frequency=4)
+VER<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 30)), start=c(2005,2), end=c(2020,4),   frequency=4)
+YUC<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 31)), start=c(2005,2), end=c(2020,4),   frequency=4)
+ZAC<-ts(data=(read_excel("ESTADOS.xlsx", sheet = 32)), start=c(2005,2), end=c(2020,4),   frequency=4)
+
+CV_AGS <- AGS[ ,5]
+IPV_AGS <- AGS[ ,4]
+GDP_AGS <- AGS[,6]
+REM_AGS <- AGS[,10]
+UNEMP_AGS <- AGS[,11]
+DEBT_AGS <- AGS[,12]
+plot_AGS<-ts(cbind(CV_AGS,IPV_AGS,GDP_AGS,REM_AGS,UNEMP_AGS,DEBT_AGS),start=c(2005,2),frequency=4)
+plot(plot_AGS)
+
+CV_BC <- BC[ ,5]
+IPV_BC <- BC[ ,4]
+GDP_BC <- BC[,6]
+REM_BC <- BC[,10]
+UNEMP_BC <- BC[,11]
+DEBT_BC <- BC[,12]
+plot_BC<-ts(cbind(CV_BC,IPV_BC,GDP_BC,REM_BC,UNEMP_BC,DEBT_BC),start=c(2005,2),frequency=4)
+plot(plot_BC)
+
+CV_BCS <- BCS[ ,5]
+IPV_BCS <- BCS[ ,4]
+GDP_BCS <- BCS[,6]
+REM_BCS <- BCS[,10]
+UNEMP_BCS <- BCS[,11]
+DEBT_BCS <- BCS[,12]
+plot_BCS<-ts(cbind(CV_BCS,IPV_BCS,GDP_BCS,REM_BCS,UNEMP_BCS,DEBT_BCS),start=c(2005,2),frequency=4)
+plot(plot_BCS)
+
+CV_CAMP <- CAMP[ ,5]
+IPV_CAMP <- CAMP[ ,4]
+GDP_CAMP <- CAMP[,6]
+REM_CAMP <- CAMP[,10]
+UNEMP_CAMP <- CAMP[,11]
+DEBT_CAMP <- CAMP[,12]
+plot_CAMP<-ts(cbind(CV_CAMP,IPV_CAMP,GDP_CAMP,REM_CAMP,UNEMP_CAMP,DEBT_CAMP),start=c(2005,2),frequency=4)
+plot(plot_CAMP)
+
+CV_CHIS <- CHIS[ ,5]
+IPV_CHIS <- CHIS[ ,4]
+GDP_CHIS <- CHIS[,6]
+REM_CHIS <- CHIS[,10]
+UNEMP_CHIS <- CHIS[,11]
+DEBT_CHIS <- CHIS[,12]
+plot_CHIS<-ts(cbind(CV_CHIS,IPV_CHIS,GDP_CHIS,REM_CHIS,UNEMP_CHIS,DEBT_CHIS),start=c(2005,2),frequency=4)
+plot(plot_CHIS)
+
+CV_CHIH <- CHIH[ ,5]
+IPV_CHIH <- CHIH[ ,4]
+GDP_CHIH <- CHIH[,6]
+REM_CHIH <- CHIH[,10]
+UNEMP_CHIH <- CHIH[,11]
+DEBT_CHIH <- CHIH[,12]
+plot_CHIH<-ts(cbind(CV_CHIH,IPV_CHIH,GDP_CHIH,REM_CHIH,UNEMP_CHIH,DEBT_CHIH),start=c(2005,2),frequency=4)
+plot(plot_CHIH)
+
+CV_CDMX <- CDMX[ ,5]
+IPV_CDMX <- CDMX[ ,4]
+GDP_CDMX <- CDMX[,6]
+REM_CDMX <- CDMX[,10]
+UNEMP_CDMX <- CDMX[,11]
+DEBT_CDMX <- CDMX[,12]
+plot_CDMX<-ts(cbind(CV_CDMX,IPV_CDMX,GDP_CDMX,REM_CDMX,UNEMP_CDMX,DEBT_CDMX),start=c(2005,2),frequency=4)
+plot(plot_CDMX)
+
+CV_COAH <- COAH[ ,5]
+IPV_COAH <- COAH[ ,4]
+GDP_COAH <- COAH[,6]
+REM_COAH <- COAH[,10]
+UNEMP_COAH <- COAH[,11]
+DEBT_COAH <- COAH[,12]
+plot_COAH<-ts(cbind(CV_COAH,IPV_COAH,GDP_COAH,REM_COAH,UNEMP_COAH,DEBT_COAH),start=c(2005,2),frequency=4)
+plot(plot_COAH)
+
+CV_COL <- COL[ ,5]
+IPV_COL <- COL[ ,4]
+GDP_COL <- COL[,6]
+REM_COL <- COL[,10]
+UNEMP_COL <- COL[,11]
+DEBT_COL <- COL[,12]
+plot_COL<-ts(cbind(CV_COL,IPV_COL,GDP_COL,REM_COL,UNEMP_COL,DEBT_COL),start=c(2005,2),frequency=4)
+plot(plot_COL)
+
+CV_DGO <- DGO[ ,5]
+IPV_DGO <- DGO[ ,4]
+GDP_DGO <- DGO[,6]
+REM_DGO <- DGO[,10]
+UNEMP_DGO <- DGO[,11]
+DEBT_DGO <- DGO[,12]
+plot_DGO<-ts(cbind(CV_DGO,IPV_DGO,GDP_DGO,REM_DGO,UNEMP_DGO,DEBT_DGO),start=c(2005,2),frequency=4)
+plot(plot_DGO)
+
+CV_GTO <- GTO[ ,5]
+IPV_GTO <- GTO[ ,4]
+GDP_GTO <- GTO[,6]
+REM_GTO <- GTO[,10]
+UNEMP_GTO <- GTO[,11]
+DEBT_GTO <- GTO[,12]
+plot_GTO<-ts(cbind(CV_GTO,IPV_GTO,GDP_GTO,REM_GTO,UNEMP_GTO,DEBT_GTO),start=c(2005,2),frequency=4)
+plot(plot_GTO)
+
+CV_GRO <- GRO[ ,5]
+IPV_GRO <- GRO[ ,4]
+GDP_GRO <- GRO[,6]
+REM_GRO <- GRO[,10]
+UNEMP_GRO <- GRO[,11]
+DEBT_GRO <- GRO[,12]
+plot_GRO<-ts(cbind(CV_GRO,IPV_GRO,GDP_GRO,REM_GRO,UNEMP_GRO,DEBT_GRO),start=c(2005,2),frequency=4)
+plot(plot_GRO)
+
+CV_HGO <- HGO[ ,5]
+IPV_HGO <- HGO[ ,4]
+GDP_HGO <- HGO[,6]
+REM_HGO <- HGO[,10]
+UNEMP_HGO <- HGO[,11]
+DEBT_HGO <- HGO[,12]
+plot_HGO<-ts(cbind(CV_HGO,IPV_HGO,GDP_HGO,REM_HGO,UNEMP_HGO,DEBT_HGO),start=c(2005,2),frequency=4)
+plot(plot_HGO)
+
+CV_JAL <- JAL[ ,5]
+IPV_JAL <- JAL[ ,4]
+GDP_JAL <- JAL[,6]
+REM_JAL <- JAL[,10]
+UNEMP_JAL <- JAL[,11]
+DEBT_JAL <- JAL[,12]
+plot_JAL<-ts(cbind(CV_JAL,IPV_JAL,GDP_JAL,REM_JAL,UNEMP_JAL,DEBT_JAL),start=c(2005,2),frequency=4)
+plot(plot_JAL)
+
+CV_MEX <- MEX[ ,5]
+IPV_MEX <- MEX[ ,4]
+GDP_MEX <- MEX[,6]
+REM_MEX <- MEX[,10]
+UNEMP_MEX <- MEX[,11]
+DEBT_MEX <- MEX[,12]
+plot_MEX<-ts(cbind(CV_MEX,IPV_MEX,GDP_MEX,REM_MEX,UNEMP_MEX,DEBT_MEX),start=c(2005,2),frequency=4)
+plot(plot_MEX)
+
+CV_MICH <- MICH[ ,5]
+IPV_MICH <- MICH[ ,4]
+GDP_MICH <- MICH[,6]
+REM_MICH <- MICH[,10]
+UNEMP_MICH <- MICH[,11]
+DEBT_MICH <- MICH[,12]
+plot_MICH<-ts(cbind(CV_MICH,IPV_MICH,GDP_MICH,REM_MICH,UNEMP_MICH,DEBT_MICH),start=c(2005,2),frequency=4)
+plot(plot_MICH)
+
+CV_MOR <- MOR[ ,5]
+IPV_MOR <- MOR[ ,4]
+GDP_MOR <- MOR[,6]
+REM_MOR <- MOR[,10]
+UNEMP_MOR <- MOR[,11]
+DEBT_MOR <- MOR[,12]
+plot_MOR<-ts(cbind(CV_MOR,IPV_MOR,GDP_MOR,REM_MOR,UNEMP_MOR,DEBT_MOR),start=c(2005,2),frequency=4)
+plot(plot_MOR)
+
+CV_NAY <- NAY[ ,5]
+IPV_NAY <- NAY[ ,4]
+GDP_NAY <- NAY[,6]
+REM_NAY <- NAY[,10]
+UNEMP_NAY <- NAY[,11]
+DEBT_NAY <- NAY[,12]
+plot_NAY<-ts(cbind(CV_NAY,IPV_NAY,GDP_NAY,REM_NAY,UNEMP_NAY,DEBT_NAY),start=c(2005,2),frequency=4)
+plot(plot_NAY)
+
+CV_NL <- NL[ ,5]
+IPV_NL <- NL[ ,4]
+GDP_NL <- NL[,6]
+REM_NL <- NL[,10]
+UNEMP_NL <- NL[,11]
+DEBT_NL <- NL[,12]
+plot_NL<-ts(cbind(CV_NL,IPV_NL,GDP_NL,REM_NL,UNEMP_NL,DEBT_NL),start=c(2005,2),frequency=4)
+plot(plot_NL)
+
+CV_OAXACA <- OAXACA[ ,5]
+IPV_OAXACA <- OAXACA[ ,4]
+GDP_OAXACA <- OAXACA[,6]
+REM_OAXACA <- OAXACA[,10]
+UNEMP_OAXACA <- OAXACA[,11]
+DEBT_OAXACA <- OAXACA[,12]
+plot_OAXACA<-ts(cbind(CV_OAXACA,IPV_OAXACA,GDP_OAXACA,REM_OAXACA,UNEMP_OAXACA,DEBT_OAXACA),start=c(2005,2),frequency=4)
+plot(plot_OAXACA)
+
+CV_PUE <- PUE[ ,5]
+IPV_PUE <- PUE[ ,4]
+GDP_PUE <- PUE[,6]
+REM_PUE <- PUE[,10]
+UNEMP_PUE <- PUE[,11]
+DEBT_PUE <- PUE[,12]
+plot_PUE<-ts(cbind(CV_PUE,IPV_PUE,GDP_PUE,REM_PUE,UNEMP_PUE,DEBT_PUE),start=c(2005,2),frequency=4)
+plot(plot_PUE)
+
+CV_QRO <- QRO[ ,5]
+IPV_QRO <- QRO[ ,4]
+GDP_QRO <- QRO[,6]
+REM_QRO <- QRO[,10]
+UNEMP_QRO <- QRO[,11]
+DEBT_QRO <- QRO[,12]
+plot_QRO<-ts(cbind(CV_QRO,IPV_QRO,GDP_QRO,REM_QRO,UNEMP_QRO,DEBT_QRO),start=c(2005,2),frequency=4)
+plot(plot_QRO)
+
+CV_Q_ROO <- Q_ROO[ ,5]
+IPV_Q_ROO <- Q_ROO[ ,4]
+GDP_Q_ROO <- Q_ROO[,6]
+REM_Q_ROO <- Q_ROO[,10]
+UNEMP_Q_ROO <- Q_ROO[,11]
+DEBT_Q_ROO <- Q_ROO[,12]
+plot_Q_ROO<-ts(cbind(CV_Q_ROO,IPV_Q_ROO,GDP_Q_ROO,REM_Q_ROO,UNEMP_Q_ROO,DEBT_Q_ROO),start=c(2005,2),frequency=4)
+plot(plot_Q_ROO)
+
+CV_SLP <- SLP[ ,5]
+IPV_SLP <- SLP[ ,4]
+GDP_SLP <- SLP[,6]
+REM_SLP <- SLP[,10]
+UNEMP_SLP <- SLP[,11]
+DEBT_SLP <- SLP[,12]
+plot_SLP<-ts(cbind(CV_SLP,IPV_SLP,GDP_SLP,REM_SLP,UNEMP_SLP,DEBT_SLP),start=c(2005,2),frequency=4)
+plot(plot_SLP)
+
+CV_SIN <- SIN[ ,5]
+IPV_SIN <- SIN[ ,4]
+GDP_SIN <- SIN[,6]
+REM_SIN <- SIN[,10]
+UNEMP_SIN <- SIN[,11]
+DEBT_SIN <- SIN[,12]
+plot_SIN<-ts(cbind(CV_SIN,IPV_SIN,GDP_SIN,REM_SIN,UNEMP_SIN,DEBT_SIN),start=c(2005,2),frequency=4)
+plot(plot_SIN)
+
+CV_SON <- SON[ ,5]
+IPV_SON <- SON[ ,4]
+GDP_SON <- SON[,6]
+REM_SON <- SON[,10]
+UNEMP_SON <- SON[,11]
+DEBT_SON <- SON[,12]
+plot_SON<-ts(cbind(CV_SON,IPV_SON,GDP_SON,REM_SON,UNEMP_SON,DEBT_SON),start=c(2005,2),frequency=4)
+plot(plot_SON)
+
+CV_TAB <- TAB[ ,5]
+IPV_TAB <- TAB[ ,4]
+GDP_TAB <- TAB[,6]
+REM_TAB <- TAB[,10]
+UNEMP_TAB <- TAB[,11]
+DEBT_TAB <- TAB[,12]
+plot_TAB<-ts(cbind(CV_TAB,IPV_TAB,GDP_TAB,REM_TAB,UNEMP_TAB,DEBT_TAB),start=c(2005,2),frequency=4)
+plot(plot_TAB)
+
+CV_TAMPS <- TAMPS[ ,5]
+IPV_TAMPS <- TAMPS[ ,4]
+GDP_TAMPS <- TAMPS[,6]
+REM_TAMPS <- TAMPS[,10]
+UNEMP_TAMPS <- TAMPS[,11]
+DEBT_TAMPS <- TAMPS[,12]
+plot_TAMPS<-ts(cbind(CV_TAMPS,IPV_TAMPS,GDP_TAMPS,REM_TAMPS,UNEMP_TAMPS,DEBT_TAMPS),start=c(2005,2),frequency=4)
+plot(plot_TAMPS)
+
+CV_TLAX <- TLAX[ ,5]
+IPV_TLAX <- TLAX[ ,4]
+GDP_TLAX <- TLAX[,6]
+REM_TLAX <- TLAX[,10]
+UNEMP_TLAX <- TLAX[,11]
+DEBT_TLAX <- TLAX[,12]
+plot_TLAX<-ts(cbind(CV_TLAX,IPV_TLAX,GDP_TLAX,REM_TLAX,UNEMP_TLAX,DEBT_TLAX),start=c(2005,2),frequency=4)
+plot(plot_TLAX)
+
+CV_VER <- VER[ ,5]
+IPV_VER <- VER[ ,4]
+GDP_VER <- VER[,6]
+REM_VER <- VER[,10]
+UNEMP_VER <- VER[,11]
+DEBT_VER <- VER[,12]
+plot_VER<-ts(cbind(CV_VER,IPV_VER,GDP_VER,REM_VER,UNEMP_VER,DEBT_VER),start=c(2005,2),frequency=4)
+plot(plot_VER)
+
+CV_YUC <- YUC[ ,5]
+IPV_YUC <- YUC[ ,4]
+GDP_YUC <- YUC[,6]
+REM_YUC <- YUC[,10]
+UNEMP_YUC <- YUC[,11]
+DEBT_YUC <- YUC[,12]
+plot_YUC<-ts(cbind(CV_YUC,IPV_YUC,GDP_YUC,REM_YUC,UNEMP_YUC,DEBT_YUC),start=c(2005,2),frequency=4)
+plot(plot_YUC)
+
+CV_ZAC <- ZAC[ ,5]
+IPV_ZAC <- ZAC[ ,4]
+GDP_ZAC <- ZAC[,6]
+REM_ZAC <- ZAC[,10]
+UNEMP_ZAC <- ZAC[,11]
+DEBT_ZAC <- ZAC[,12]
+plot_ZAC<-ts(cbind(CV_ZAC,IPV_ZAC,GDP_ZAC,REM_ZAC,UNEMP_ZAC,DEBT_ZAC),start=c(2005,2),frequency=4)
+plot(plot_ZAC)
+```
+
+## Correlation
+```{r}
+round(cor(plot_AGS),2)
+round(cor(plot_BC),2)
+round(cor(plot_BCS),2)
+round(cor(plot_CAMP),2)
+round(cor(plot_CHIS),2)
+round(cor(plot_CHIH),2)
+round(cor(plot_CDMX),2)
+round(cor(plot_COAH),2)
+round(cor(plot_COL),2)
+round(cor(plot_DGO),2)
+round(cor(plot_GTO),2)
+round(cor(plot_GRO),2)
+round(cor(plot_HGO),2)
+round(cor(plot_JAL),2)
+round(cor(plot_MEX),2)
+round(cor(plot_MICH),2)
+round(cor(plot_MOR),2)
+round(cor(plot_NAY),2)
+round(cor(plot_NL),2)
+round(cor(plot_OAXACA),2)
+round(cor(plot_PUE),2)
+round(cor(plot_QRO),2)
+round(cor(plot_Q_ROO),2)
+round(cor(plot_SLP),2)
+round(cor(plot_SIN),2)
+round(cor(plot_SON),2)
+round(cor(plot_TAB),2)
+round(cor(plot_TAMPS),2)
+round(cor(plot_TLAX),2)
+round(cor(plot_VER),2)
+round(cor(plot_YUC),2)
+round(cor(plot_ZAC),2)
+```
+
+## Data Analysis
+
+### Delincquency rates by State
+
+```{r}
+library("ellipsis")
+library("cli")
+library("devtools")
+library("mxmaps")
+
+CV_STATES<-cbind(CV_AGS,CV_BC,CV_BCS,CV_CAMP,CV_CDMX,CV_CHIH,CV_CHIS,CV_COAH,CV_COL,CV_DGO,CV_GRO,CV_GTO,CV_HGO,CV_JAL,CV_MEX,CV_MICH,CV_MOR,CV_NAY,CV_NL,CV_OAXACA,CV_PUE,CV_Q_ROO,CV_QRO,CV_SIN,CV_SLP,CV_SON,CV_TAB,CV_TAMPS,CV_TLAX,CV_VER,CV_YUC,CV_ZAC)
+
+KEY<-c(01,	02,	03,	04,	09,	08,	07,	05,	06,	10,	12,	11,	13,	14,	15,	16,	17,	18,	19,	20,	21,	23,	22,	25,	24,	26,	27,	28,	29,	30,	31,	32)
+
+CV_2020<-CV_STATES[60:63,]
+
+CV_2020_MEAN<-c(mean(CV_2020[,1]),mean(CV_2020[,2]),mean(CV_2020[,3]),mean(CV_2020[,4]),mean(CV_2020[,5]),mean(CV_2020[,6]),mean(CV_2020[,7]),mean(CV_2020[,8]),mean(CV_2020[,9]),mean(CV_2020[,10]),mean(CV_2020[,11]),mean(CV_2020[,12]),mean(CV_2020[,13]),mean(CV_2020[,14]),mean(CV_2020[,15]),mean(CV_2020[,16]),mean(CV_2020[,17]),mean(CV_2020[,18]),mean(CV_2020[,19]),mean(CV_2020[,20]),mean(CV_2020[,21]),mean(CV_2020[,22]),mean(CV_2020[,23]),mean(CV_2020[,24]),mean(CV_2020[,25]),mean(CV_2020[,26]),mean(CV_2020[,27]),mean(CV_2020[,28]),mean(CV_2020[,29]),mean(CV_2020[,30]),mean(CV_2020[,31]),mean(CV_2020[,32]))
+
+MAPCV2020<-as.data.frame(t(rbind(CV_2020_MEAN,KEY)))
+colnames(MAPCV2020)<-c("value","region")
+
+MAP <- mxstate_choropleth(MAPCV2020, num_colors=1, title="Average delincquency rate by state (2020)")
+MAP
+```
+
+### GDP by State
+
+```{r}
+```
+
+### 
+
+# Stationarity
+
+*(development of state level models is still pending)*
+
+```{r, include = FALSE}
+summary(ur.df(IPV_AGS,lags=0))
+summary(ur.df(GDP_AGS,lags=0))
+summary(ur.df(REM_AGS,lags=0))
+summary(ur.df(UNEMP_AGS,lags=0))
+summary(ur.df(DEBT_AGS,lags=0))
+
+summary(ur.df(CV_MOR,lags=0))
+CV_MOR_diff1<-diff(CV_MOR)
+summary(ur.df(CV_MOR_diff1,lags=0))
+plot(ts(cbind(CV_MOR,CV_MOR_diff1),start=c(2005,2),frequency=4))
+
+summary(ur.df(IPV_MOR,lags=0))
+summary(ur.df(GDP_MOR,lags=0))
+summary(ur.df(REM_MOR,lags=0))
+summary(ur.df(UNEMP_MOR,lags=0))
+summary(ur.df(DEBT_MOR,lags=0))
+
+summary(ur.df(CV_NAY,lags=0))
+CV_NAY_diff1<-diff(CV_NAY)
+summary(ur.df(CV_NAY_diff1,lags=0))
+plot(ts(cbind(CV_NAY,CV_NAY_diff1),start=c(2005,2),frequency=4))
+
+summary(ur.df(IPV_NAY,lags=0))
+summary(ur.df(GDP_NAY,lags=0))
+summary(ur.df(REM_NAY,lags=0))
+summary(ur.df(UNEMP_NAY,lags=0))
+summary(ur.df(DEBT_NAY,lags=0))
+
+summary(ur.df(CV_NL,lags=0))
+CV_NL_diff1<-diff(CV_NL)
+summary(ur.df(CV_NL_diff1,lags=0))
+plot(ts(cbind(CV_NL,CV_NL_diff1),start=c(2005,2),frequency=4))
+
+summary(ur.df(CV_NL,lags=0))
+summary(ur.df(IPV_NL,lags=0))
+summary(ur.df(GDP_NL,lags=0))
+summary(ur.df(REM_NL,lags=0))
+summary(ur.df(UNEMP_NL,lags=0))
+summary(ur.df(DEBT_NL,lags=0))
+
+summary(ur.df(CV_OAXACA,lags=0))
+CV_OAXACA_diff1<-diff(CV_OAXACA)
+summary(ur.df(CV_OAXACA_diff1,lags=0))
+plot(ts(cbind(CV_OAXACA,CV_OAXACA_diff1),start=c(2005,2),frequency=4))
+
+summary(ur.df(CV_OAXACA,lags=0))
+summary(ur.df(IPV_OAXACA,lags=0))
+summary(ur.df(GDP_OAXACA,lags=0))
+summary(ur.df(REM_OAXACA,lags=0))
+summary(ur.df(UNEMP_OAXACA,lags=0))
+summary(ur.df(DEBT_OAXACA,lags=0))
+
+summary(ur.df(CV_PUE,lags=0))
+CV_PUE_diff1<-diff(CV_PUE)
+summary(ur.df(CV_PUE_diff1,lags=0))
+plot(ts(cbind(CV_PUE,CV_PUE_diff1),start=c(2005,2),frequency=4))
+
+summary(ur.df(CV_PUE,lags=0))
+summary(ur.df(IPV_PUE,lags=0))
+summary(ur.df(GDP_PUE,lags=0))
+summary(ur.df(REM_PUE,lags=0))
+summary(ur.df(UNEMP_PUE,lags=0))
+summary(ur.df(DEBT_PUE,lags=0))
+
+summary(ur.df(CV_QRO,lags=0))
+CV_QRO_diff1<-diff(CV_QRO)
+summary(ur.df(CV_QRO_diff1,lags=0))
+plot(ts(cbind(CV_QRO,CV_QRO_diff1),start=c(2005,2),frequency=4))
+
+summary(ur.df(CV_QRO,lags=0))
+summary(ur.df(IPV_QRO,lags=0))
+summary(ur.df(GDP_QRO,lags=0))
+summary(ur.df(REM_QRO,lags=0))
+summary(ur.df(UNEMP_QRO,lags=0))
+summary(ur.df(DEBT_QRO,lags=0))
+
+summary(ur.df(CV_Q_ROO,lags=0))
+CV_Q_ROO_diff1<-diff(CV_Q_ROO)
+summary(ur.df(CV_Q_ROO_diff1,lags=0))
+plot(ts(cbind(CV_Q_ROO,CV_Q_ROO_diff1),start=c(2005,2),frequency=4))
+
+summary(ur.df(CV_Q_ROO,lags=0))
+summary(ur.df(IPV_Q_ROO,lags=0))
+summary(ur.df(GDP_Q_ROO,lags=0))
+summary(ur.df(REM_Q_ROO,lags=0))
+summary(ur.df(UNEMP_Q_ROO,lags=0))
+summary(ur.df(DEBT_Q_ROO,lags=0))
+
+summary(ur.df(CV_SIN,lags=0))
+CV_SIN_diff1<-diff(CV_SIN)
+summary(ur.df(CV_SIN_diff1,lags=0))
+plot(ts(cbind(CV_SIN,CV_SIN_diff1),start=c(2005,2),frequency=4))
+
+summary(ur.df(CV_SIN,lags=0))
+summary(ur.df(IPV_SIN,lags=0))
+summary(ur.df(GDP_SIN,lags=0))
+summary(ur.df(REM_SIN,lags=0))
+summary(ur.df(UNEMP_SIN,lags=0))
+summary(ur.df(DEBT_SIN,lags=0))
+```
+
