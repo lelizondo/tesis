@@ -1,5 +1,5 @@
 ---
-title: "A Cross-Subsidy Scheme for Social Housing in Mexico"
+title: "Delinquency rate determinants in the mexican housing credit market: a regional analysis"
 output:
   pdf_document:
     number_sections: TRUE
@@ -15,7 +15,6 @@ header-includes:
   - \usepackage{dcolumn}
   - \usepackage{natbib}\bibliographystyle{agsm}
   - \usepackage[nottoc, numbib]{tocbibind}
-bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -50,13 +49,13 @@ knitr::include_graphics("CC-diss-rmd copy/img/escudoudem.jpg")
 \Large
 
 \doublespacing
-{\bf A Cross-Subsidy Scheme for Social Housing in Mexico, \\ SUBTÍTULO*}
+{\bf Delinquency rate determinants in the mexican housing credit market: a regional analysis, \\}
 
 \vspace{1 cm}
 
 \normalsize
 \singlespacing
-Autores (español), By (inglés)
+By
 
 \vspace{0.5 cm}
 
